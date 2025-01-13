@@ -1,11 +1,11 @@
 import React from "react";
-import { createRoot, Root } from "react-dom/client";
+import { Root, createRoot } from "react-dom/client";
 import { defineComponent } from "vue";
 import { TerrainAchievements } from "@/types/terrainTypes";
 import { fetchUnitAchievementsFilterd, fetchUnitMembers } from "@/services";
 import { TerrainRootState } from "@/types/terrainState";
-import MilestoneReportTable from "./components/MilestoneReport";
-import MilestonePlanningItem from "./models/MilestonePlanningItem";
+import MilestoneReportTable from "./components/UnitSummary";
+import MilestonePlanningItem from "./models/UnitSummarytem";
 import { TerrainState } from "@/helpers";
 
 function data() {
@@ -16,7 +16,7 @@ function data() {
 }
 
 export default defineComponent({
-  name: "MilestoneReport",
+  name: "UnitSummary",
   data,
   watch: {
     items(newItems) {
@@ -40,9 +40,9 @@ export default defineComponent({
         exact: true,
       },
       {
-        text: "Milestone Report",
+        text: "Unit Summary Report",
         disabled: true,
-        to: "/summit/reports/milestone",
+        to: "/summit/reports/unitsummary",
         exact: true,
       },
     ];
@@ -51,19 +51,11 @@ export default defineComponent({
     this.unmountReactComponent();
   },
   methods: {
-    /**
-     * Retrieves milestone data for the current section.
-     *
-     * @async
-     * @function getMilestoneData
-     * @returns {Promise<void>} - Resolves when the milestone data has been retrieved and processed.
-     */
-    getMilestoneData: async function () {
+    async getMilestoneData() {
       const currentSection = TerrainState.getSectionName();
       const achievements = (await fetchUnitAchievementsFilterd(`type=milestone&section=${currentSection}`)) as TerrainAchievements[];
-      const sortedAchievements = achievements.sort((a, b) => (a.achievement_meta?.stage ?? 0) - (b.achievement_meta?.stage ?? 0));
-      // Filter by Achievements that are incomplete and not awarded, include "Not Required" for skipped milestones
-      const filteredAchievements = sortedAchievements.filter((a) => a.milestone_requirement_status === "incomplete" && a.status !== "awarded" && a.status != "not_required");
+      const filteredAchievements = achievements.sort((a, b) => (a.achievement_meta?.stage ?? 0) - (b.achievement_meta?.stage ?? 0)).filter((a) => a.milestone_requirement_status === "incomplete" && a.status !== "awarded");
+
       this.items = (await fetchUnitMembers())
         .filter((m) => m.unit.duty !== "adult_leader")
         .map(
