@@ -22,7 +22,6 @@ export default async function getCurrentProfile(): Promise<TerrainProfile[] | un
     // cache the data for 5 mins
     return data.profiles as TerrainProfile[];
   } catch (e) {
-    console.log("Error fetching current profile: " + e);
     return undefined;
   }
 }

@@ -22,7 +22,6 @@ export default async function fetchUnitMembers(): Promise<TerrainUnitMember[]> {
     const jsonData = await response.json();
     return jsonData.results;
   } catch (e) {
-    console.log("Error fetching unit members: " + e);
     return [];
   }
 }

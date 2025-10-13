@@ -44,11 +44,6 @@ jobs:
       run: |
         npm install -g webpack @types/jest jest typescript webpack-cli npm-run-all
         npm ci
-
-    - name: Activate Syncfusion License
-      run: npx syncfusion-license activate
-      env:
-        SYNCFUSION_LICENSE: ${{ secrets.SYNCFUSION_LICENSE }}
         
     - name: Build Summit
       run: |

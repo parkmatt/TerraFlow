@@ -19,7 +19,6 @@ export default async function fetchSIATemplate(templateId: string): Promise<unkn
     }
     return await response.json();
   } catch (e) {
-    console.log("Error fetching sia template: " + e);
     return undefined;
   }
 }

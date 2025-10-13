@@ -4,7 +4,7 @@
   height: 100%;
 }
 
-.summit-dialog-max-size {
+.terraflow-dialog-max-size {
   max-height: 100% !important;
   max-width: 100% !important;
   height: 100% !important;
@@ -23,13 +23,32 @@ nav:has(* a[href*="/terrain"]),
 nav:has(* a[href*="/terrain"]) * .NavMenu__menu-group:not(div:has(* a[href*="/terrain"])),
 nav:has(* a[href*="/terrain"]) * .NavMenu__expansion-panel-content,
 nav:has(* a[href*="/terrain"]) * .NavMenu__expansion-panel,
-.NavMenu__menu-group:has(* a[href*="/summit"]),
-div.NavMenu__menu-group:has(* a[href*="/summit/"]) * .NavMenu__expansion-panel,
-div.NavMenu__menu-group:has(* a[href*="/summit/"]) * div.NavMenu__subitem-content
+.NavMenu__menu-group:has(* a[href*="/terraflow"]),
+div.NavMenu__menu-group:has(* a[href*="/terraflow/"]) * .NavMenu__expansion-panel,
+div.NavMenu__menu-group:has(* a[href*="/terraflow/"]) * div.NavMenu__subitem-content,
+/* TerraFlow-added menu items - always green with higher specificity */
+.terraflow-menu-item,
+.v-list-item.terraflow-menu-item,
+nav .terraflow-menu-item,
+nav .v-list-item.terraflow-menu-item,
+.v-navigation-drawer .terraflow-menu-item,
+.v-navigation-drawer .v-list-item.terraflow-menu-item,
+.v-list .terraflow-menu-item,
+.v-list .v-list-item.terraflow-menu-item
 {
   background: #004C00 !important;
   border-bottom: 1px solid #004100 !important;
   border-top: 0px solid #004100 !important;
+}
+
+/* TerraFlow menu item text color with higher specificity */
+.terraflow-menu-item .v-list-item__title,
+.v-list-item.terraflow-menu-item .v-list-item__title,
+nav .terraflow-menu-item .v-list-item__title,
+nav .v-list-item.terraflow-menu-item .v-list-item__title,
+.v-navigation-drawer .terraflow-menu-item .v-list-item__title,
+.v-navigation-drawer .v-list-item.terraflow-menu-item .v-list-item__title {
+  color: white !important;
 }
 
 
@@ -37,34 +56,196 @@ nav:has(* a[href*="/terrain"]) * .NavMenu__expansion-panel:hover,
 nav:has(* a[href*="/terrain"]) * .NavMenu__secondary-link:hover,
 nav:has(* a[href*="/terrain"]) * .NavMenu__menu-group:not(div:has(* a[href*="/terrain"])):hover,
 nav:has(* a[href*="/terrain"]) * .NavMenu__menu-group:not(div:has(* a[href*="/terrain"])) > .v-menu-group__header:hover,
-div.NavMenu__menu-group:has(* a[href*="/summit/"]) * .NavMenu__expansion-panel:hover,
-.NavMenu__menu-group:has(* a[href*="/summit"]):hover,
-.NavMenu__menu-group:has(* a[href*="/summit"]) > .v-menu-group__header:hover,
-div.NavMenu__expansion-panel.v-menu-group--active:has(* a[href*="/summit/"]) * a.v-list-item--active > .NavMenu__subitem-content,
-div.NavMenu__expansion-panel.v-menu-group--active:has(* a[href*="/summit/"]) > .v-menu-group__header {
+div.NavMenu__menu-group:has(* a[href*="/terraflow/"]) * .NavMenu__expansion-panel:hover,
+.NavMenu__menu-group:has(* a[href*="/terraflow"]):hover,
+.NavMenu__menu-group:has(* a[href*="/terraflow"]) > .v-menu-group__header:hover,
+div.NavMenu__expansion-panel.v-menu-group--active:has(* a[href*="/terraflow/"]) * a.v-list-item--active > .NavMenu__subitem-content,
+div.NavMenu__expansion-panel.v-menu-group--active:has(* a[href*="/terraflow/"]) > .v-menu-group__header,
+/* TerraFlow-added menu items hover states with higher specificity */
+.terraflow-menu-item:hover,
+.v-list-item.terraflow-menu-item:hover,
+nav .terraflow-menu-item:hover,
+nav .v-list-item.terraflow-menu-item:hover,
+.v-navigation-drawer .terraflow-menu-item:hover,
+.v-navigation-drawer .v-list-item.terraflow-menu-item:hover,
+.v-list .terraflow-menu-item:hover,
+.v-list .v-list-item.terraflow-menu-item:hover {
   background: #006600 !important;
 }
 
-div.NavMenu__expansion-panel.v-menu-group--active:has(* a[href*="/summit/"]) * a.v-list-item--active > .NavMenu__subitem-content
+div.NavMenu__expansion-panel.v-menu-group--active:has(* a[href*="/terraflow/"]) * a.v-list-item--active > .NavMenu__subitem-content
 {
   background: #197419 !important;
 }
 
-div.v-menu-group__header:has(* a[href*="/summit/"]),
-div.v-menu-group__header:has(> a[href*="/summit/"]),
-div.v-menu-group__items:has(* a[href*="/summit/"])
+/* Override any active/selected states for TerraFlow menu items */
+.v-list-item.terraflow-menu-item.v-list-item--active,
+.v-list-item.terraflow-menu-item.v-list-item--selected,
+nav .v-list-item.terraflow-menu-item.v-list-item--active,
+nav .v-list-item.terraflow-menu-item.v-list-item--selected,
+.v-navigation-drawer .v-list-item.terraflow-menu-item.v-list-item--active,
+.v-navigation-drawer .v-list-item.terraflow-menu-item.v-list-item--selected {
+  background: #004C00 !important;
+}
+
+/* Override any theme-based coloring for TerraFlow items */
+.v-theme--light .terraflow-menu-item,
+.v-theme--dark .terraflow-menu-item,
+.v-theme--light .v-list-item.terraflow-menu-item,
+.v-theme--dark .v-list-item.terraflow-menu-item {
+  background: #004C00 !important;
+}
+
+/* Additional styling for parent containers */
+.terraflow-menu-parent .v-list-item,
+.terraflow-menu-parent .terraflow-menu-item {
+  background: #004C00 !important;
+}
+
+/* Fallback styling by text content - highest specificity */
+/* Use attribute selectors and more specific targeting */
+nav [title*="Topo Reports"],
+nav [aria-label*="Topo Reports"],
+.v-navigation-drawer [title*="Topo Reports"],
+.v-navigation-drawer [aria-label*="Topo Reports"],
+nav [title*="TerraFlow Calendar"],
+nav [aria-label*="TerraFlow Calendar"],
+.v-navigation-drawer [title*="TerraFlow Calendar"],
+.v-navigation-drawer [aria-label*="TerraFlow Calendar"] {
+  background: #004C00 !important;
+  color: white !important;
+}
+
+/* Force styling on the list item containers themselves */
+.v-list .v-list-item[data-terraflow="true"],
+nav .v-list-item[data-terraflow="true"],
+.v-navigation-drawer .v-list-item[data-terraflow="true"] {
+  background: #004C00 !important;
+  color: white !important;
+}
+
+/* Additional universal TerraFlow item selectors */
+*[data-terraflow-item="Topo Reports"],
+*[data-terraflow-item="TerraFlow Calendar"] {
+  background: #004C00 !important;
+  color: white !important;
+}
+
+/* Inline style overrides - highest priority */
+.v-list-item[style*="background"][data-terraflow="true"],
+nav .v-list-item[style*="background"][data-terraflow="true"],
+.v-navigation-drawer .v-list-item[style*="background"][data-terraflow="true"] {
+  background: #004C00 !important;
+  color: white !important;
+}
+
+/* Universal catch-all for any TerraFlow items */
+[data-terraflow="true"] {
+  background: #004C00 !important;
+  color: white !important;
+}
+
+[data-terraflow="true"] * {
+  color: white !important;
+}
+
+/* React Big Calendar custom styles */
+.rbc-calendar {
+  min-height: 500px;
+}
+
+.rbc-month-view {
+  min-height: 500px;
+}
+
+.rbc-agenda-view {
+  min-height: 500px;
+}
+
+.rbc-agenda-view table.rbc-agenda-table {
+  width: 100%;
+  border: 1px solid #ddd;
+}
+
+.rbc-agenda-view .rbc-agenda-table tbody > tr > td {
+  padding: 5px 10px;
+  vertical-align: top;
+}
+
+.rbc-agenda-view .rbc-agenda-date-cell,
+.rbc-agenda-view .rbc-agenda-time-cell {
+  white-space: nowrap;
+}
+
+.rbc-agenda-view .rbc-agenda-event-cell {
+  width: 100%;
+}
+
+.rbc-toolbar {
+  margin-bottom: 10px;
+}
+
+.rbc-btn-group {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.rbc-btn-group > .rbc-btn:first-child {
+  border-bottom-left-radius: 4px;
+  border-top-left-radius: 4px;
+}
+
+.rbc-btn-group > .rbc-btn:last-child {
+  border-bottom-right-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.rbc-btn {
+  color: inherit;
+  font: inherit;
+  margin: 0;
+  overflow: visible;
+  text-transform: none;
+  appearance: button;
+  background: none;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 1em;
+  line-height: normal;
+  padding: 0.25em 0.5em;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.rbc-btn:hover,
+.rbc-btn:focus {
+  background-color: #e6e6e6;
+  border-color: #8c8c8c;
+}
+
+.rbc-btn.rbc-active {
+  background-color: #0088cc;
+  border-color: #0088cc;
+  color: #fff;
+}
+
+div.v-menu-group__header:has(* a[href*="/terraflow/"]),
+div.v-menu-group__header:has(> a[href*="/terraflow/"]),
+div.v-menu-group__items:has(* a[href*="/terraflow/"])
 {
   background: #004C00 !important;
 }
 
-div.v-menu-group__header:has(> a[href*="/summit/"]):hover,
-a.NavMenu__subitem[href*="/summit/"]:hover > div.NavMenu__subitem-content:hover,
-a.NavMenu__sub-subitem[href*="/summit/"]:hover {
+div.v-menu-group__header:has(> a[href*="/terraflow/"]):hover,
+a.NavMenu__subitem[href*="/terraflow/"]:hover > div.NavMenu__subitem-content:hover,
+a.NavMenu__sub-subitem[href*="/terraflow/"]:hover {
   background-color: #006600 !important;
 }
 
 
-div.NavMenu__menu-group:has(* a[href*="/summit/"]):hover * div.NavMenu__subitem-content:hover{
+div.NavMenu__menu-group:has(* a[href*="/terraflow/"]):hover * div.NavMenu__subitem-content:hover{
   background: #006600 !important;
   cursor: default;
 }

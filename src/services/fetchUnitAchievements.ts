@@ -23,7 +23,6 @@ export default async function fetchUnitAchievements(): Promise<TerrainAchievemen
     return jsonData.results;
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.log(`Error fetching unit achievements: ${e}`);
     return [];
   }
 }

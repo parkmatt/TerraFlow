@@ -9,4 +9,5 @@ export interface NavMenuItem {
   items: NavMenuItem[];
   locked: boolean;
   roles: boolean[];
+  external?: boolean;
 }

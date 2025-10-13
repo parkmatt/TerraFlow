@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Terrain | Summit - Test",
+    "name": "Terrain | TerraFlow",
     "version": "3.1.0",
-    "description": "Where Every Achievement is a Summit Conquered",
+    "description": "Make Terrain events flow",
     "icons": {
         "16": "/images/Icon16.png",
         "48": "/images/Icon48.png",
@@ -14,17 +14,17 @@
                 "https://terrain.scouts.com.au/*"
             ],
             "js": [
-                "/scripts/summitloader.js"
+                "/scripts/terraflowloader.js"
             ],
             "css": [
-                "/styles/summit.css",
+                "/styles/terraflow.css",
                 "/styles/fluent.min.css"
             ]
         }
     ],
     "web_accessible_resources": [
         {
-          "resources": ["scripts/summit.js"],
+          "resources": ["scripts/terraflow.js"],
           "matches": ["https://terrain.scouts.com.au/*"]
         }
       ],

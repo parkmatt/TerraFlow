@@ -22,7 +22,6 @@ export default async function fetchAchievements(type: string): Promise<TerrainAc
     const jsonData = await response.json();
     return jsonData.results;
   } catch (e) {
-    console.log("Error fetching unit achievements: " + e);
     return undefined;
   }
 }

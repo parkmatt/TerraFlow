@@ -1,33 +1,49 @@
-# Summit
+# TerraFlow
 
-This tool is to help provide usability features to the Scouts | Terrain website. Feel free to let us know about any issues or request new features in the issues tab.
+## Make Terrain Events Flow
 
-To get started install the add on for your browser below:
+TerraFlow is a browser extension that enhances the Scouts | Terrain website with improved calendar management and event flow optimisation.
 
-[![Chome Logo](https://github.com/pete-mc/Summit/wiki/images/chrome.png)](https://chromewebstore.google.com/detail/terrain-summit/fkpdafjknodpembpmogbcblabonpmhoo?hl=en&pli=1) [![Edge Logo](https://github.com/pete-mc/Summit/wiki/images/edge.png)](https://microsoftedge.microsoft.com/addons/detail/terrain-summit/eoemenakogcfmmhkoiejhefmdijgpgnb)
+## Built on Summit
+This project extends the excellent open source [Summit project](https://github.com/pete-mc/Summit) by Peter McDonald with enhanced calendar features.
 
-[![Build and Release Chrome Extension](https://github.com/pete-mc/Summit/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/pete-mc/Summit/actions/workflows/build.yaml)
+## Key Features
 
-## Examples
+### 🗓️ Enhanced Calendar View
+- **Color-coordinated events** - Visual consistency between calendar selection and event display
+- **Improved event navigation** - Streamlined interface for better event management
+- **Flexible week start** - Configure which day the calendar week starts on
 
-A few of the features are showcased below. [Visit the Wiki to see the full list of features and how-to guides](https://github.com/pete-mc/Summit/wiki).
+### 🔗 Seamless Terrain Integration  
+- **"View in Terrain" functionality** - Direct links to specific events in Terrain
+- **Smart event loading** - Automatic event selection and navigation
 
-## Peak Award Progress Report
+### ⚙️ Customizable Event Defaults
+- **Default start time** - Set your preferred time for new events
+- **Default duration** - Configure how long new events should last (15-1440 minutes)
+- **Default location** - Pre-fill location field for new events
+- **Default calendar** - Choose which calendar new events are added to automatically
 
-User friendly single page report to see where each of the youth members are traveling on the peak award journey.
-![Peak Award](https://github.com/pete-mc/Summit/wiki/images/peak-award.png)
+### ⚡ Optimised User Experience
+- **Streamlined workflows** - Reduced clicks and improved efficiency
+- **Persistent settings** - All preferences saved locally in your browser
+- **Modern interface** - Clean, intuitive design with smooth interactions
 
-## OAS Report
+## Installation
+Install the browser extension for your preferred browser.
 
-This report will give you a nice summary of the OAS levels each youth member is at and the related streams. This is a nice one pager to help you see where all the members of your unit are up to.
-![OAS Report](https://github.com/pete-mc/Summit/wiki/images/oas-report.png)
+## Development
 
-## Bulk Calendar Entry Form
+Built with:
+- React + TypeScript
+- Ant Design components  
+- React Big Calendar
+- Webpack build system
 
-This is to help you submit a full term or more of activities to your plan. It simplifies the process by only asking the basic questions and you can enter many on a single page.
-![Bulk Calendar Tool](https://github.com/pete-mc/Summit/wiki/images/bulk-events.png)
+## Contributing
 
-## Export events to your own calendar
+Report issues or request features via [GitHub Issues](https://github.com/).
 
-Sick of adding events in Terrain and also your own calendar. Use the shiny new button contained in a planned activity and you will recieve a ical file ready to be imported into whichever calendar application you use.
-![Export Events](https://github.com/pete-mc/Summit/wiki/images/save-calendar.png)
+---
+
+*TerraFlow - Make Terrain events flow*

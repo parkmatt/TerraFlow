@@ -23,7 +23,6 @@ export default async function fetchMemberCalendars(): Promise<TerrrainCalendarRe
     return data;
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.log(`Error fetching calendars: ${e}`);
     return {};
   }
 }

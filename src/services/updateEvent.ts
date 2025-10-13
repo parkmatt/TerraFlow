@@ -20,7 +20,6 @@ export default async function updateEvent(eventId: string, body: string): Promis
       throw new Error(`HTTP error! status: ${response.status}`);
     }
   } catch (e) {
-    console.log("Error updating event: " + e);
     throw e;
   }
 }

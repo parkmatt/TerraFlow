@@ -9,7 +9,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 module.exports = {
   entry: './src/index.ts',
   output: {
-    filename: 'scripts/summit.js',
+    filename: 'scripts/terraflow.js',
     path: path.resolve(__dirname, 'dist'),
   },
   resolve: {
@@ -43,11 +43,11 @@ module.exports = {
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: 'styles/summit.css',
+      filename: 'styles/terraflow.css',
     }),
     new CopyPlugin({
       patterns: [
-        { from: 'package.json', to: '' }, { from: 'LICENSE', to: '' }, { from: 'README.md', to: '' }, { from: 'src/styles/fluent.min.css', to: 'styles'}, { from: 'src/summitloader.js', to: 'scripts'},{ from: 'manifest.json', to: '' }, { from: 'src/images', to: 'images' }, 
+        { from: 'package.json', to: '' }, { from: 'LICENSE', to: '' }, { from: 'README.md', to: '' }, { from: 'src/styles/fluent.min.css', to: 'styles'}, { from: 'src/terraflowloader.js', to: 'scripts'},{ from: 'manifest.json', to: '' }, { from: 'src/images', to: 'images' }, 
       ],
     }),
     new VueLoaderPlugin()
@@ -62,24 +62,18 @@ module.exports = {
     hints: false,
   },
   devtool: isDevelopment ? 'inline-source-map' : false,
-  devServer: {
-    static: {
-      directory: path.join(__dirname, "dist"),
-    },
-    allowedHosts: "all",
-    host: "localhost",
-    compress: true,
-    port: 443,
-    server: {
-      type: "https",
-      options: {
-        key: fs.readFileSync("./certs/cert.key"),
-        cert: fs.readFileSync("./certs/cert.crt"),
-        ca: fs.readFileSync("./certs/ca.crt"),
+  ...(isDevelopment && {
+    devServer: {
+      static: {
+        directory: path.join(__dirname, "dist"),
+      },
+      allowedHosts: "all",
+      host: "localhost",
+      compress: true,
+      port: 443,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
       },
     },
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-  },
+  }),
 };
