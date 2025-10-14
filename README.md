@@ -1,22 +1,17 @@
 # TerraFlow
-
-## Make Terrain Events Flow
-
 TerraFlow is a browser extension that enhances the Scouts | Terrain website with improved calendar management and event flow optimisation.
 
 ## Built on Summit
-This project extends the excellent open source [Summit project](https://github.com/pete-mc/Summit) by Peter McDonald with enhanced calendar features.
+This project was based on the excellent open source [Summit project](https://github.com/pete-mc/Summit) by Peter McDonald.
 
 ## Key Features
 
 ### 🗓️ Enhanced Calendar View
-- **Color-coordinated events** - Visual consistency between calendar selection and event display
-- **Improved event navigation** - Streamlined interface for better event management
+- **Faster event creation** - Streamlined interface for better event management
 - **Flexible week start** - Configure which day the calendar week starts on
 
 ### 🔗 Seamless Terrain Integration  
 - **"View in Terrain" functionality** - Direct links to specific events in Terrain
-- **Smart event loading** - Automatic event selection and navigation
 
 ### ⚙️ Customizable Event Defaults
 - **Default start time** - Set your preferred time for new events
@@ -33,7 +28,6 @@ This project extends the excellent open source [Summit project](https://github.c
 Install the browser extension for your preferred browser.
 
 ## Development
-
 Built with:
 - React + TypeScript
 - Ant Design components  
@@ -41,8 +35,7 @@ Built with:
 - Webpack build system
 
 ## Contributing
-
-Report issues or request features via [GitHub Issues](https://github.com/).
+Report issues or request features via [GitHub Issues](https://github.com/parkmatt/TerraFlow/).
 
 ---
 
