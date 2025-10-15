@@ -16,9 +16,6 @@
       <!-- Event Defaults Card -->
       <div class="settings-card">
         <div class="card-header">
-          <div class="card-icon">
-            <span class="icon">📅</span>
-          </div>
           <div class="card-title-section">
             <h2 class="card-title">Event Default Settings</h2>
             <p class="card-description">Set default values for new calendar events</p>
@@ -172,7 +169,7 @@ export default component;
 .settings-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
@@ -180,31 +177,31 @@ export default component;
 
 /* Header */
 .settings-header {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .header-content {
   text-align: center;
-  padding: 40px 32px;
+  padding: 20px 20px;
   background: linear-gradient(135deg, #00B140 0%, #009235 100%);
-  border-radius: 20px;
+  border-radius: 16px;
   color: white;
   box-shadow: 
-    0 20px 40px rgba(0, 177, 64, 0.3),
+    0 16px 32px rgba(0, 177, 64, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .settings-title {
-  font-size: 2.8rem;
+  font-size: 2rem;
   font-weight: 800;
-  margin: 0 0 12px 0;
+  margin: 0 0 6px 0;
   letter-spacing: -0.025em;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .settings-subtitle {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin: 0;
   opacity: 0.95;
   font-weight: 500;
@@ -214,7 +211,7 @@ export default component;
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 16px;
 }
 
 /* Settings Cards */
@@ -241,7 +238,7 @@ export default component;
 .card-header {
   display: flex;
   align-items: center;
-  padding: 32px;
+  padding: 20px;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   border-bottom: 2px solid #e2e8f0;
   position: relative;
@@ -258,23 +255,23 @@ export default component;
 }
 
 .card-icon {
-  margin-right: 20px;
+  margin-right: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, #00B140, #009235);
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: 
-    0 8px 24px rgba(0, 177, 64, 0.3),
-    0 0 0 3px rgba(255, 255, 255, 1),
-    0 0 0 6px rgba(0, 177, 64, 0.2);
+    0 6px 16px rgba(0, 177, 64, 0.25),
+    0 0 0 2px rgba(255, 255, 255, 1),
+    0 0 0 4px rgba(0, 177, 64, 0.15);
   border: 2px solid white;
 }
 
 .card-icon .icon {
-  font-size: 28px;
+  font-size: 22px;
   filter: grayscale(1) brightness(0) invert(1);
 }
 
@@ -283,15 +280,15 @@ export default component;
 }
 
 .card-title {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
   letter-spacing: -0.015em;
 }
 
 .card-description {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: #64748b;
   margin: 0;
   font-weight: 500;
@@ -299,7 +296,7 @@ export default component;
 
 /* Card Content */
 .card-content {
-  padding: 32px;
+  padding: 20px;
   background: white;
 }
 
@@ -308,10 +305,10 @@ export default component;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
+  padding: 16px;
   border: 2px solid #f1f5f9;
-  border-radius: 16px;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  margin-bottom: 12px;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   transition: all 0.3s ease;
 }
@@ -329,23 +326,23 @@ export default component;
 
 .setting-info {
   flex: 1;
-  margin-right: 32px;
+  margin-right: 20px;
 }
 
 .setting-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1e293b;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   display: block;
   letter-spacing: -0.01em;
 }
 
 .setting-description {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #64748b;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.4;
   font-weight: 500;
 }
 
@@ -357,8 +354,8 @@ export default component;
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 68px;
-  height: 36px;
+  width: 56px;
+  height: 30px;
   cursor: pointer;
 }
 
@@ -375,26 +372,26 @@ export default component;
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-  border: 3px solid #94a3b8;
-  border-radius: 36px;
+  border: 2px solid #94a3b8;
+  border-radius: 30px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 3px 8px rgba(0, 0, 0, 0.12),
     0 0 0 1px rgba(0, 0, 0, 0.05) inset;
 }
 
 .toggle-slider:before {
   position: absolute;
   content: "";
-  height: 24px;
-  width: 24px;
+  height: 20px;
+  width: 20px;
   left: 3px;
   bottom: 3px;
   background: linear-gradient(135deg, #ffffff, #f1f5f9);
   border: 2px solid #e2e8f0;
   border-radius: 50%;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .toggle-switch input:checked + .toggle-slider {
@@ -406,10 +403,10 @@ export default component;
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(32px);
+  transform: translateX(26px);
   background: linear-gradient(135deg, #ffffff, #ffffff);
   border-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .toggle-switch:hover .toggle-slider {
@@ -418,9 +415,9 @@ export default component;
 
 /* Modern Button-Like Inputs */
 .modern-input, .modern-select {
-  padding: 16px 20px;
-  border: 3px solid #e2e8f0;
-  border-radius: 16px;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   font-size: 1.1rem;
   font-family: inherit;
   font-weight: 600;

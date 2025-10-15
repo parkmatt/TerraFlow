@@ -256,20 +256,20 @@ div.NavMenu__menu-group:has(* a[href*="/terraflow/"]):hover * div.NavMenu__subit
   color: #fff;
 } */
 
-.summit-btn { 
+.terraflow-btn { 
   background: linear-gradient(97.08deg,#004C00,#197419) !important;
 }
-.summit-menu { 
+.terraflow-menu { 
   background: #004C00 !important;
   border-bottom-color: #197419 !important;
   border-top-color: #197419 !important;
 }
 
-.summit-menu-outline { 
+.terraflow-menu-outline { 
   border: 1px solid #004C00 !important;
   color: #004C00 !important;
 }
-.summit-menu:hover {
+.terraflow-menu:hover {
   background-color: #197419 !important;
 }
 

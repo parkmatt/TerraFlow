@@ -13,11 +13,11 @@ const localizer = momentLocalizer(moment);
 
 // Default event settings helper functions
 const getDefaultEventSettings = () => {
-  const defaultStartTime = localStorage.getItem('summit_event_startTime') || '19:00';
-  const defaultDuration = parseInt(localStorage.getItem('summit_event_duration') || '90');
-  const defaultLocation = localStorage.getItem('summit_event_location') || '';
-  const defaultCalendar = localStorage.getItem('summit_event_defaultCalendar') || '';
-  const startingDayOfWeek = parseInt(localStorage.getItem('summit_event_startingDayOfWeek') || '1'); // Monday
+  const defaultStartTime = localStorage.getItem('terraflow_event_startTime') || '19:00';
+  const defaultDuration = parseInt(localStorage.getItem('terraflow_event_duration') || '90');
+  const defaultLocation = localStorage.getItem('terraflow_event_location') || '';
+  const defaultCalendar = localStorage.getItem('terraflow_event_defaultCalendar') || '';
+  const startingDayOfWeek = parseInt(localStorage.getItem('terraflow_event_startingDayOfWeek') || '1'); // Monday
   return { defaultStartTime, defaultDuration, defaultLocation, defaultCalendar, startingDayOfWeek };
 };
 
@@ -157,7 +157,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       selectedEvent: null,
       filteredEvents: [],
       calendarKey: 0,
-      startingDayOfWeek: parseInt(localStorage.getItem('summit_event_startingDayOfWeek') || '1'), // Monday
+      startingDayOfWeek: parseInt(localStorage.getItem('terraflow_event_startingDayOfWeek') || '1'), // Monday
       currentDate: new Date(),
       newEventForm: {
         title: '',
@@ -178,7 +178,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
 
   // Update moment locale to use the configured starting day of week
   updateMomentLocale = () => {
-    const startingDayOfWeek = parseInt(localStorage.getItem('summit_event_startingDayOfWeek') || '1');
+    const startingDayOfWeek = parseInt(localStorage.getItem('terraflow_event_startingDayOfWeek') || '1');
     
     // Update moment locale to use the configured first day of week
     moment.updateLocale('en', {
@@ -202,12 +202,12 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     this.fetchData();
     
     // Listen for changes to default event settings
-    window.addEventListener('summitEventSettingsChanged', this.handleEventSettingsChange as EventListener);
+    window.addEventListener('terraflowEventSettingsChanged', this.handleEventSettingsChange as EventListener);
   }
 
   componentWillUnmount() {
     // Clean up event listener
-    window.removeEventListener('summitEventSettingsChanged', this.handleEventSettingsChange as EventListener);
+    window.removeEventListener('terraflowEventSettingsChanged', this.handleEventSettingsChange as EventListener);
   }
 
   componentDidUpdate(prevProps: TerraFlowCalendarProps, prevState: TerraFlowCalendarState) {

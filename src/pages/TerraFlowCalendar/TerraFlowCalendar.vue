@@ -8,8 +8,8 @@
         style="
           background: white; 
           border: 1px solid #ddd; 
-          border-radius: 50%; 
-          width: 40px; 
+          border-radius: 10%; 
+          width: 100px; 
           height: 40px; 
           cursor: pointer; 
           display: flex; 
@@ -23,7 +23,7 @@
         @mouseover="$event.target.style.backgroundColor = '#f5f5f5'; $event.target.style.borderColor = '#00B140'"
         @mouseout="$event.target.style.backgroundColor = 'white'; $event.target.style.borderColor = '#ddd'"
       >
-        ⚙️
+        ⚙️Settings
       </button>
     </div>
     <div ref="reactRoot"></div>

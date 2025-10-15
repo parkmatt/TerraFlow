@@ -3,8 +3,6 @@ import { TerraFlowCalendar } from "@/pages";
 import { NavMenuComponent, NavMenuItem } from "@/types/NavMenu";
 import VueRouter, { Route } from "vue-router";
 import Vue from "vue";
-import { InitProgrammingExportBtn } from "@/components";
-import { fetchAchievements } from "@/services";
 import TerraFlowSettings from "@/pages/TerraFlowSettings/TerraFlowSettings.vue";
 
 export default class TerraFlowRouter {

@@ -23,14 +23,14 @@ const DEFAULT_EVENT_SETTINGS: EventDefaultSettings = {
 
 // Helper functions
 const getStoredEventSetting = (key: keyof EventDefaultSettings, defaultValue: any) => {
-  const stored = localStorage.getItem(`summit_event_${key}`);
+  const stored = localStorage.getItem(`terraflow_event_${key}`);
   return stored ? (key === 'duration' ? parseInt(stored) : stored) : defaultValue;
 };
 
 const storeEventSetting = (key: keyof EventDefaultSettings, value: any) => {
-  localStorage.setItem(`summit_event_${key}`, value.toString());
+  localStorage.setItem(`terraflow_event_${key}`, value.toString());
   // Dispatch event for other components to listen to
-  window.dispatchEvent(new CustomEvent('summitEventSettingsChanged', {
+  window.dispatchEvent(new CustomEvent('terraflowEventSettingsChanged', {
     detail: { key, value }
   }));
 };
