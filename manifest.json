@@ -17,8 +17,7 @@
                 "/scripts/terraflowloader.js"
             ],
             "css": [
-                "/styles/terraflow.css",
-                "/styles/fluent.min.css"
+                "/styles/terraflow.css"
             ]
         }
     ],
