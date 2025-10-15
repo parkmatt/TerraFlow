@@ -31,17 +31,220 @@ export default class TerraFlowRouter {
   }
 
   public finaliseSetup(): void {
-    const terrain = (window as any).app?.$store?.state;
-    if (terrain?.user?.username?.length > 0) {
-      setTimeout(() => {
-        this.addTerraFlowItemsToTerrainMenu();
-      }, 1000);
-    } else {
-      // Add menu items anyway (for testing or when user state is not available)
-      setTimeout(() => {
-        this.addTerraFlowItemsToTerrainMenu();
-      }, 1000);
+    const hostname = window.location.hostname;
+    const pathname = window.location.pathname;
+    
+    if (!hostname.includes('terrain.scouts.com.au')) {
+      console.log('TerraFlow: Not on Terrain domain, skipping setup');
+      return;
     }
+    
+    if (pathname.includes('/login') || pathname.includes('/auth') || pathname === '/') {
+      console.log('TerraFlow: On login/auth page, skipping setup');
+      return;
+    }
+    
+    console.log('TerraFlow: Setting up hover menu near burger button...');
+    
+    // Create hover menu near the burger button
+    setTimeout(() => {
+      this.createHoverMenu();
+    }, 2000);
+  }
+
+  private createHoverMenu(): void {
+    console.log('TerraFlow: Creating hover menu...');
+    
+    // Remove existing menu if any
+    const existing = document.getElementById('terraflow-hover-menu');
+    if (existing) {
+      existing.remove();
+    }
+    
+    // Create the hover menu container
+    const hoverMenu = document.createElement('div');
+    hoverMenu.id = 'terraflow-hover-menu';
+    
+    // Create trigger button
+    const trigger = document.createElement('div');
+    trigger.id = 'terraflow-trigger';
+    trigger.style.cssText = `
+      position: fixed;
+      top: 16px;
+      left: 300px;
+      width: auto;
+      min-width: 100px;
+      height: 32px;
+      padding: 0 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 1100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+      font-family: Arial, sans-serif;
+      gap: 6px;
+    `;
+    
+    // Create icon using Unicode symbol instead of SVG
+    const icon = document.createElement('span');
+    icon.textContent = '⚜️';
+    icon.style.cssText = `
+      font-size: 14px;
+      opacity: 0.8;
+    `;
+    
+    trigger.appendChild(icon);
+    trigger.appendChild(document.createTextNode('TerraFlow'));
+    
+    // Create dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'terraflow-dropdown';
+    dropdown.innerHTML = `
+      <!-- Header -->
+      <div style="
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 8px 12px;
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+      ">TERRAFLOW</div>
+      
+      <!-- Menu Items -->
+      <div style="padding: 4px 0;">
+        <a href="/terraflow/tools/TerraFlowCalendar" id="tf-calendar-link" style="
+          display: flex;
+          align-items: center;
+          padding: 10px 12px;
+          color: #333;
+          text-decoration: none;
+          font-size: 14px;
+          transition: background-color 0.2s;
+          border: none;
+        ">
+          <span style="margin-right: 8px; font-size: 16px;">📅</span>
+          Calendar
+        </a>
+        <a href="https://nomisnostab.github.io/Topo-Blazor/index" target="_blank" rel="noopener" id="tf-topo-link" style="
+          display: flex;
+          align-items: center;
+          padding: 10px 12px;
+          color: #333;
+          text-decoration: none;
+          font-size: 14px;
+          transition: background-color 0.2s;
+          border: none;
+        ">
+          <span style="margin-right: 8px; font-size: 16px;">🗺️</span>
+          Topo Reports
+        </a>
+      </div>
+    `;
+    dropdown.style.cssText = `
+      position: fixed;
+      top: 52px;
+      left: 300px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1099;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+      min-width: 160px;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    `;
+    
+    hoverMenu.appendChild(trigger);
+    hoverMenu.appendChild(dropdown);
+    
+    document.body.appendChild(hoverMenu);
+    
+    // Get the created elements
+    const triggerElement = document.getElementById('terraflow-trigger');
+    const dropdownElement = document.getElementById('terraflow-dropdown');
+    const calendarLink = document.getElementById('tf-calendar-link');
+    const topoLink = document.getElementById('tf-topo-link');
+    
+    if (!triggerElement || !dropdownElement) return;
+    
+    let hoverTimeout: NodeJS.Timeout | null = null;
+    
+    // Show dropdown on hover
+    const showDropdown = () => {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+        hoverTimeout = null;
+      }
+      
+      if (dropdownElement) {
+        dropdownElement.style.opacity = '1';
+        dropdownElement.style.visibility = 'visible';
+        dropdownElement.style.transform = 'translateY(0)';
+      }
+      
+      if (triggerElement) {
+        triggerElement.style.background = 'rgba(255, 255, 255, 0.2)';
+        triggerElement.style.transform = 'scale(1.05)';
+      }
+    };
+    
+    // Hide dropdown with delay
+    const hideDropdown = () => {
+      hoverTimeout = setTimeout(() => {
+        if (dropdownElement) {
+          dropdownElement.style.opacity = '0';
+          dropdownElement.style.visibility = 'hidden';
+          dropdownElement.style.transform = 'translateY(-10px)';
+        }
+        
+        if (triggerElement) {
+          triggerElement.style.background = 'rgba(255, 255, 255, 0.1)';
+          triggerElement.style.transform = 'scale(1)';
+        }
+      }, 150);
+    };
+    
+    // Event listeners
+    triggerElement.addEventListener('mouseenter', showDropdown);
+    triggerElement.addEventListener('mouseleave', hideDropdown);
+    dropdownElement.addEventListener('mouseenter', showDropdown);
+    dropdownElement.addEventListener('mouseleave', hideDropdown);
+    
+    // Add hover effects to menu items
+    if (calendarLink) {
+      calendarLink.addEventListener('mouseenter', () => {
+        calendarLink.style.backgroundColor = '#f8f9fa';
+      });
+      calendarLink.addEventListener('mouseleave', () => {
+        calendarLink.style.backgroundColor = 'transparent';
+      });
+      calendarLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/terraflow/tools/TerraFlowCalendar';
+      });
+    }
+    
+    if (topoLink) {
+      topoLink.addEventListener('mouseenter', () => {
+        topoLink.style.backgroundColor = '#f8f9fa';
+      });
+      topoLink.addEventListener('mouseleave', () => {
+        topoLink.style.backgroundColor = 'transparent';
+      });
+    }
+    
+    console.log('TerraFlow: Hover menu created successfully');
   }
 
   public resetMenu(): void {
@@ -171,7 +374,7 @@ export default class TerraFlowRouter {
           }
           
           // Try Vuex store integration
-          const store = navMenuComponent.$store;
+          const store = (navMenuComponent as any).$store;
           if (store) {
             const actions = ['navigation/addMenuItem', 'nav/addMenuItem', 'menu/addMenuItem'];
             const mutations = ['navigation/ADD_MENU_ITEM', 'nav/ADD_MENU_ITEM', 'menu/ADD_MENU_ITEM'];
