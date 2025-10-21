@@ -31,7 +31,7 @@ const formatDateTimeForAPI = (date: moment.Moment | null, time: Dayjs | null): s
     .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
 };
 
-const createEventPayload = (formData: any, selectedEvent?: TerraFlowCalendarItem, allCalendars?: { id: string; name: string; selected: boolean; type?: string }[]) => {
+const createEventPayload = (formData: any, selectedEvent?: TerraFlowCalendarItem, allCalendars?: { id: string; name: string; selected: boolean; type?: string }[], fullEvent?: any) => {
   const startDateTime = formatDateTimeForAPI(formData.startDate, formData.startTime);
   const endDateTime = formatDateTimeForAPI(formData.endDate, formData.endTime);
 
@@ -41,6 +41,14 @@ const createEventPayload = (formData: any, selectedEvent?: TerraFlowCalendarItem
 
   // For updates, only send the fields that should change
   if (selectedEvent) {
+    // Preserve existing review data or use default
+    const existingReview = fullEvent?.review;
+    const reviewData = {
+      general_tags: [],
+      scout_method_elements: existingReview?.scout_method_elements || ["symbolic_framework"],
+      scout_spices_elements: []
+    };
+
     return {
       title: formData.title,
       description: formData.description,
@@ -49,6 +57,7 @@ const createEventPayload = (formData: any, selectedEvent?: TerraFlowCalendarItem
       end_datetime: endDateTime,
       challenge_area: formData.challengeArea,
       status: selectedEvent.event.status || "planned",
+      review: reviewData,
     };
   }
 
@@ -71,7 +80,7 @@ const createEventPayload = (formData: any, selectedEvent?: TerraFlowCalendarItem
     }] : [],
     iana_timezone: "Australia/Brisbane",
     status: "planned",
-    organisers: [TerrainState.getMemberID()],
+  organisers: [TerrainState.getMemberID()],
     attendance: {
       leader_member_ids: [],
       assistant_member_ids: [],
@@ -314,7 +323,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
   private mapEventToCalendars = (item: TerraFlowCalendarItem): string[] => {
     const matchingInviteeIds: string[] = [];
     
-    // Simple and reliable: Use invitee_id to match calendar IDs directly
+    // Use invitee_id to match calendar IDs directly
     if (item.event.invitee_id) {
       const directMatch = this.state.allCalendars.find(cal => cal.id === item.event.invitee_id);
       if (directMatch) {
@@ -462,7 +471,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
   onSelectEvent = async (event: any) => {
     const calendarItem = event.resource as TerraFlowCalendarItem;
     
-    // Parse the event description to extract challenge area (basic parsing)
+    // Get challenge area from API response
     const challengeArea = calendarItem.event.challenge_area || 'community';
     
     // Determine event type from invitee_type
@@ -473,7 +482,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     const location = fullEvent?.location || '';
     const description = fullEvent?.description || '';
     
-    // Use invitee_id as the authoritative calendar ID
+    // Use invitee_id as calendar ID
     const selectedInviteeId = calendarItem.event.invitee_id || '';
     
     // Go directly to edit mode when clicking on an event
@@ -606,13 +615,13 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     this.setState({ isCreatingEvent: true });
 
     try {
-      // For updates, delete the old event and create a new one
-      // This works around CORS/permission issues with PATCH
-      await deleteEvent(selectedEvent.Id);
+      // Fetch full event details to get existing review data
+      const fullEvent = await fetchActivity(selectedEvent.Id);
       
-      // Create new event with updated data (don't pass selectedEvent to get full payload)
-      const eventToUpload = createEventPayload(newEventForm, undefined, this.state.allCalendars);
-      await createNewEvent(JSON.stringify(eventToUpload));
+      // Use update API
+      // This preserves attendance, uploads, and other data we don't track
+      const eventToUpdate = createEventPayload(newEventForm, selectedEvent, this.state.allCalendars, fullEvent);
+      await updateEvent(selectedEvent.Id, JSON.stringify(eventToUpdate));
       
       message.success('Event updated successfully!');
       this.closeModal();
@@ -667,9 +676,9 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       return;
     }
 
-    const currentStatus = selectedEvent.event.status;
-    const newStatus = currentStatus === "concluded" ? "planned" : "concluded";
-    const actionText = newStatus === "concluded" ? "completed" : "incomplete";
+  const currentStatus = selectedEvent.event.status;
+  const newStatus = currentStatus === "concluded" ? "planned" : "concluded";
+  const actionText = newStatus === "concluded" ? "concluded" : "planned";
 
     this.setState({ isCreatingEvent: true });
 
@@ -679,6 +688,14 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       
       // Use invitee_id as the authoritative calendar ID, fallback to current unit
       const originalInviteeId = selectedEvent.event.invitee_id || TerrainState.getUnitID();
+      
+      // Preserve existing review data or use default
+      const existingReview = fullEvent?.review;
+      const reviewData = {
+        general_tags: [],
+        scout_method_elements: existingReview?.scout_method_elements || ["symbolic_framework"],
+        scout_spices_elements: []
+      };
       
       // Create a complete event payload using the same structure as new events
       const eventToUpload = {
@@ -699,7 +716,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         }],
         iana_timezone: "Australia/Brisbane",
         status: newStatus,
-        organisers: [TerrainState.getMemberID()],
+  organisers: [TerrainState.getMemberID()],
         attendance: {
           leader_member_ids: [],
           assistant_member_ids: [],
@@ -721,22 +738,12 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
           },
           groups: [],
         },
-        review: { 
-          general_tags: [], 
-          scout_method_elements: ["symbolic_framework"], 
-          scout_spices_elements: [] 
-        },
-        justification: `Status changed to ${newStatus} by ${TerrainState.getMemberID()}`,
+        review: reviewData,
+  // justification removed to avoid unwanted status message
       };
 
-      // Delete the old event and create a new one with updated status
-      await deleteEvent(selectedEvent.Id);
-      await createNewEvent(
-        JSON.stringify(eventToUpload), 
-        originalInviteeId, 
-        selectedEvent.event.invitee_type || 'unit'
-      );
-      
+      // Update the event status using updateEvent (PATCH)
+      await updateEvent(selectedEvent.Id, JSON.stringify(eventToUpload));
       message.success(`Event marked as ${actionText}!`);
       this.closeModal();
       this.fetchData();
@@ -824,19 +831,20 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
             window.$nuxt.$accessor.programming.setActivity(fullEvent);
             window.$nuxt.$accessor.programming.setActivityFlow("view");
           }
-          
-          // Open Terrain in a new tab
+          // Open Terrain in a new tab (base URL)
           const terrainUrl = `https://terrain.scouts.com.au/programming/view-activity`;
           window.open(terrainUrl, '_blank');
         } else {
           // Fallback to programming calendar
-          const eventTitle = this.state.selectedEvent.event.title;
-          this.fallbackToProgrammingCalendar(eventTitle, eventData.id);
+          const eventTitle = this.state.selectedEvent.event.title || "";
+          const eventId = eventData.id || "unknown";
+          this.fallbackToProgrammingCalendar(eventTitle, eventId);
         }
       } catch (error) {
         // Fallback to programming calendar
-        const eventTitle = this.state.selectedEvent.event.title;
-        this.fallbackToProgrammingCalendar(eventTitle, eventData.id);
+        const eventTitle = this.state.selectedEvent.event.title || "";
+        const eventId = eventData.id || "unknown";
+        this.fallbackToProgrammingCalendar(eventTitle, eventId);
       }
     }
   };
@@ -858,9 +866,15 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
   };
 
   renderEventModal = () => {
+  const isConcluded = this.state.selectedEvent && this.state.selectedEvent.event.status === "concluded";
+    
     return (
       <Modal
-        title={this.state.selectedEvent ? "Edit Event" : "New Event"}
+        title={
+          this.state.selectedEvent 
+            ? (isConcluded ? "View Event (Concluded)" : "Edit Event") 
+            : "New Event"
+        }
         open={this.state.isModalVisible}
         onCancel={this.closeModal}
         afterOpenChange={(open) => {
@@ -893,37 +907,48 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         }}
         footer={
           this.state.selectedEvent ? [
-            // Edit mode - show Open in Terrain, Mark Complete/Incomplete, Update, Delete, and Cancel buttons
+            // Edit mode - show different buttons based on event status
             <Button key="terrain" onClick={this.openInTerrain}>
               View in Terrain
             </Button>,
-            <Button 
-              key="completion" 
-              type={this.state.selectedEvent.event.status === "concluded" ? "default" : "primary"}
-              style={{
-                backgroundColor: this.state.selectedEvent.event.status === "concluded" ? "#ffa940" : "#52c41a",
-                borderColor: this.state.selectedEvent.event.status === "concluded" ? "#ffa940" : "#52c41a",
-                color: "white"
-              }}
-              loading={this.state.isCreatingEvent}
-              onClick={this.handleToggleCompletion}
-            >
-              {this.state.selectedEvent.event.status === "concluded" ? "Mark as Incomplete" : "Mark as Complete"}
-            </Button>,
-            <Button key="cancel" onClick={this.closeModal}>
-              Cancel
-            </Button>,
-            <Button key="delete" danger onClick={this.handleDeleteEvent} loading={this.state.isDeletingEvent}>
-              Delete Event
-            </Button>,
-            <Button 
-              key="update" 
-              type="primary" 
-              loading={this.state.isCreatingEvent}
-              onClick={this.handleUpdateEvent}
-            >
-              Update Event
-            </Button>
+            ...(isConcluded ? [
+              // For concluded events, show cancel and delete
+              <Button key="cancel" onClick={this.closeModal}>
+                Cancel
+              </Button>,
+              <Button key="delete" danger onClick={this.handleDeleteEvent} loading={this.state.isDeletingEvent}>
+                Delete Event
+              </Button>
+            ] : [
+              // For non-concluded events, show all editing options
+              <Button 
+                key="completion" 
+                type="primary"
+                style={{
+                  backgroundColor: "#52c41a",
+                  borderColor: "#52c41a",
+                  color: "white"
+                }}
+                loading={this.state.isCreatingEvent}
+                onClick={this.handleToggleCompletion}
+              >
+                Mark as Concluded
+              </Button>,
+              <Button key="cancel" onClick={this.closeModal}>
+                Cancel
+              </Button>,
+              <Button key="delete" danger onClick={this.handleDeleteEvent} loading={this.state.isDeletingEvent}>
+                Delete Event
+              </Button>,
+              <Button 
+                key="update" 
+                type="primary" 
+                loading={this.state.isCreatingEvent}
+                onClick={this.handleUpdateEvent}
+              >
+                Update Event
+              </Button>
+            ])
           ] : [
             // Create mode - show Create and Cancel buttons
             <Button key="cancel" onClick={this.closeModal}>
@@ -942,136 +967,198 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         width={800}
         style={{ maxHeight: '80vh' }}
       >
-        {/* Always show form - no read-only view */}
+        {/* Show different content based on event status */}
         <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-          <Form layout="vertical">
-            <Form.Item 
-              label="Event Title" 
-              required
-              validateStatus={!this.state.newEventForm.title ? 'error' : ''}
-              help={!this.state.newEventForm.title ? 'Please enter an event title' : ''}
-            >
-              <Input
-                ref={(ref: any) => { 
-                  this.titleInputRef = ref; 
-                }}
-                autoFocus={this.state.isModalVisible && !this.state.selectedEvent}
-                value={this.state.newEventForm.title}
-                onChange={(e) => this.handleFormFieldChange('title', e.target.value)}
-                placeholder="Enter event title"
-              />
-            </Form.Item>
-
-            <Form.Item label="Description">
-              <Input.TextArea
-                value={this.state.newEventForm.description}
-                onChange={(e) => this.handleFormFieldChange('description', e.target.value)}
-                placeholder="Enter event description"
-                rows={3}
-              />
-            </Form.Item>
-
-            <Form.Item label="Location">
-              <Input
-                value={this.state.newEventForm.location}
-                onChange={(e) => this.handleFormFieldChange('location', e.target.value)}
-                placeholder="Enter event location"
-              />
-            </Form.Item>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <Form.Item 
-                label="Start Date" 
-                required
-                validateStatus={!this.state.newEventForm.startDate ? 'error' : ''}
-              >
-                <DatePicker
-                  value={this.state.newEventForm.startDate}
-                  onChange={(date) => this.handleFormFieldChange('startDate', date)}
-                  style={{ width: '100%' }}
-                  format="DD/MM/YYYY"
-                />
-              </Form.Item>
-
-              <Form.Item 
-                label="Start Time" 
-                required
-                validateStatus={!this.state.newEventForm.startTime ? 'error' : ''}
-              >
-                <TimePicker
-                  value={this.state.newEventForm.startTime}
-                  onChange={(time) => this.handleFormFieldChange('startTime', time)}
-                  style={{ width: '100%' }}
-                  format="HH:mm"
-                />
-              </Form.Item>
+          {isConcluded ? (
+            // Read-only view for concluded events
+            <div>
+              <div style={{ 
+                padding: '16px', 
+                backgroundColor: '#fff7e6', 
+                border: '1px solid #ffd591', 
+                borderRadius: '6px', 
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ fontSize: '16px' }}>🔒</span>
+                <div>
+                  <div style={{ fontWeight: 'bold', color: '#d48806' }}>Event is Concluded</div>
+                  <div style={{ color: '#ad6800', fontSize: '14px' }}>
+                    This event is marked as concluded and cannot be edited here. 
+                    Use "View in Terrain" to make changes to concluded events.
+                  </div>
+                </div>
+              </div>
+              
+              <Form layout="vertical">
+                <Form.Item label="Event Title">
+                  <Input value={this.state.newEventForm.title} disabled />
+                </Form.Item>
+                <Form.Item label="Description">
+                  <Input.TextArea value={this.state.newEventForm.description} disabled rows={3} />
+                </Form.Item>
+                <Form.Item label="Location">
+                  <Input value={this.state.newEventForm.location} disabled />
+                </Form.Item>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <Form.Item label="Start Date">
+                    <DatePicker value={this.state.newEventForm.startDate} disabled style={{ width: '100%' }} />
+                  </Form.Item>
+                  <Form.Item label="Start Time">
+                    <TimePicker value={this.state.newEventForm.startTime} disabled style={{ width: '100%' }} />
+                  </Form.Item>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <Form.Item label="End Date">
+                    <DatePicker value={this.state.newEventForm.endDate} disabled style={{ width: '100%' }} />
+                  </Form.Item>
+                  <Form.Item label="End Time">
+                    <TimePicker value={this.state.newEventForm.endTime} disabled style={{ width: '100%' }} />
+                  </Form.Item>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <Form.Item label="Challenge Area">
+                    <Select value={this.state.newEventForm.challengeArea} disabled style={{ width: '100%' }} />
+                  </Form.Item>
+                  <Form.Item label="Calendar">
+                    <Select value={this.state.newEventForm.selectedInviteeId} disabled style={{ width: '100%' }} />
+                  </Form.Item>
+                </div>
+              </Form>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          ) : (
+            // Editable form for new events or non-concluded events
+            <Form layout="vertical">
               <Form.Item 
-                label="End Date" 
+                label="Event Title" 
                 required
-                validateStatus={!this.state.newEventForm.endDate ? 'error' : ''}
+                validateStatus={!this.state.newEventForm.title ? 'error' : ''}
+                help={!this.state.newEventForm.title ? 'Please enter an event title' : ''}
               >
-                <DatePicker
-                  value={this.state.newEventForm.endDate}
-                  onChange={(date) => this.handleFormFieldChange('endDate', date)}
-                  style={{ width: '100%' }}
-                  format="DD/MM/YYYY"
+                <Input
+                  ref={(ref: any) => { 
+                    this.titleInputRef = ref; 
+                  }}
+                  autoFocus={this.state.isModalVisible && !this.state.selectedEvent}
+                  value={this.state.newEventForm.title}
+                  onChange={(e) => this.handleFormFieldChange('title', e.target.value)}
+                  placeholder="Enter event title"
                 />
               </Form.Item>
 
-              <Form.Item 
-                label="End Time" 
-                required
-                validateStatus={!this.state.newEventForm.endTime ? 'error' : ''}
-              >
-                <TimePicker
-                  value={this.state.newEventForm.endTime}
-                  onChange={(time) => this.handleFormFieldChange('endTime', time)}
-                  style={{ width: '100%' }}
-                  format="HH:mm"
+              <Form.Item label="Description">
+                <Input.TextArea
+                  value={this.state.newEventForm.description}
+                  onChange={(e) => this.handleFormFieldChange('description', e.target.value)}
+                  placeholder="Enter event description"
+                  rows={3}
                 />
               </Form.Item>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <Form.Item label="Challenge Area">
-                <Select
-                  value={this.state.newEventForm.challengeArea}
-                  onChange={(value) => this.handleFormFieldChange('challengeArea', value)}
-                  style={{ width: '100%' }}
+              <Form.Item label="Location">
+                <Input
+                  value={this.state.newEventForm.location}
+                  onChange={(e) => this.handleFormFieldChange('location', e.target.value)}
+                  placeholder="Enter event location"
+                />
+              </Form.Item>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <Form.Item 
+                  label="Start Date" 
+                  required
+                  validateStatus={!this.state.newEventForm.startDate ? 'error' : ''}
                 >
-                  <Select.Option value="not_applicable">Not Applicable</Select.Option>
-                  <Select.Option value="community">Community</Select.Option>
-                  <Select.Option value="creative">Creative</Select.Option>
-                  <Select.Option value="outdoors">Outdoors</Select.Option>
-                  <Select.Option value="personal_growth">Personal Growth</Select.Option>
-                  <Select.Option value="social">Social</Select.Option>
-                </Select>
-              </Form.Item>
+                  <DatePicker
+                    value={this.state.newEventForm.startDate}
+                    onChange={(date) => this.handleFormFieldChange('startDate', date)}
+                    style={{ width: '100%' }}
+                    format="DD/MM/YYYY"
+                  />
+                </Form.Item>
 
-              <Form.Item 
-                label="Calendar" 
-                required
-                validateStatus={!this.state.newEventForm.selectedInviteeId ? 'error' : ''}
-                help={!this.state.newEventForm.selectedInviteeId ? 'Please select a calendar' : ''}
-              >
-                <Select
-                  value={this.state.newEventForm.selectedInviteeId}
-                  onChange={(value) => this.handleFormFieldChange('selectedInviteeId', value)}
-                  style={{ width: '100%' }}
-                  placeholder="Select calendar"
+                <Form.Item 
+                  label="Start Time" 
+                  required
+                  validateStatus={!this.state.newEventForm.startTime ? 'error' : ''}
                 >
-                  {this.state.allCalendars.map(calendar => (
-                    <Select.Option key={calendar.id} value={calendar.id}>
-                      {calendar.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </div>
-          </Form>
+                  <TimePicker
+                    value={this.state.newEventForm.startTime}
+                    onChange={(time) => this.handleFormFieldChange('startTime', time)}
+                    style={{ width: '100%' }}
+                    format="HH:mm"
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <Form.Item 
+                  label="End Date" 
+                  required
+                  validateStatus={!this.state.newEventForm.endDate ? 'error' : ''}
+                >
+                  <DatePicker
+                    value={this.state.newEventForm.endDate}
+                    onChange={(date) => this.handleFormFieldChange('endDate', date)}
+                    style={{ width: '100%' }}
+                    format="DD/MM/YYYY"
+                  />
+                </Form.Item>
+
+                <Form.Item 
+                  label="End Time" 
+                  required
+                  validateStatus={!this.state.newEventForm.endTime ? 'error' : ''}
+                >
+                  <TimePicker
+                    value={this.state.newEventForm.endTime}
+                    onChange={(time) => this.handleFormFieldChange('endTime', time)}
+                    style={{ width: '100%' }}
+                    format="HH:mm"
+                  />
+                </Form.Item>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <Form.Item label="Challenge Area">
+                  <Select
+                    value={this.state.newEventForm.challengeArea}
+                    onChange={(value) => this.handleFormFieldChange('challengeArea', value)}
+                    style={{ width: '100%' }}
+                  >
+                    <Select.Option value="not_applicable">Not Applicable</Select.Option>
+                    <Select.Option value="community">Community</Select.Option>
+                    <Select.Option value="creative">Creative</Select.Option>
+                    <Select.Option value="outdoors">Outdoors</Select.Option>
+                    <Select.Option value="personal_growth">Personal Growth</Select.Option>
+                    <Select.Option value="social">Social</Select.Option>
+                  </Select>
+                </Form.Item>
+
+                <Form.Item 
+                  label="Calendar" 
+                  required
+                  validateStatus={!this.state.newEventForm.selectedInviteeId ? 'error' : ''}
+                  help={!this.state.newEventForm.selectedInviteeId ? 'Please select a calendar' : ''}
+                >
+                  <Select
+                    value={this.state.newEventForm.selectedInviteeId}
+                    onChange={(value) => this.handleFormFieldChange('selectedInviteeId', value)}
+                    style={{ width: '100%' }}
+                    placeholder="Select calendar"
+                  >
+                    {this.state.allCalendars.map(calendar => (
+                      <Select.Option key={calendar.id} value={calendar.id}>
+                        {calendar.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </div>
+            </Form>
+          )}
         </div>
       </Modal>
     );
