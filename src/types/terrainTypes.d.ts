@@ -57,11 +57,15 @@ export interface TerrainEventSummary {
   status?: string;
   challenge_area?: string;
   event_type?: string;
-  calendar_id?: string;
   cancelled?: boolean;
   attendee?: boolean;
   organiser?: boolean;
   invited?: boolean;
+  invitee_id?: string;
+  invitee_name?: string;
+  invitee_type?: string;
+  section?: string;
+  group_id?: string;
 }
 
 // Profile types for authentication

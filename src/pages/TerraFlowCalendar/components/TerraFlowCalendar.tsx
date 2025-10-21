@@ -36,7 +36,7 @@ const createEventPayload = (formData: any, selectedEvent?: TerraFlowCalendarItem
   const endDateTime = formatDateTimeForAPI(formData.endDate, formData.endTime);
 
   // Find the selected calendar to get its type
-  const selectedCalendar = allCalendars?.find(cal => cal.id === formData.selectedCalendarId);
+  const selectedCalendar = allCalendars?.find(cal => cal.id === formData.selectedInviteeId);
   const calendarType = selectedCalendar?.type || formData.eventType;
 
   // For updates, only send the fields that should change
@@ -62,11 +62,11 @@ const createEventPayload = (formData: any, selectedEvent?: TerraFlowCalendarItem
     challenge_area: formData.challengeArea,
     event_type: { 
       type: calendarType, 
-      id: formData.selectedCalendarId || TerrainState.getUnitID()  // Use calendar ID as target
+      id: formData.selectedInviteeId || TerrainState.getUnitID()  // Use calendar ID as target
     },
     type: calendarType,
-    invitees: formData.selectedCalendarId ? [{
-      invitee_id: formData.selectedCalendarId,
+    invitees: formData.selectedInviteeId ? [{
+      invitee_id: formData.selectedInviteeId,
       invitee_type: calendarType
     }] : [],
     iana_timezone: "Australia/Brisbane",
@@ -134,7 +134,7 @@ interface TerraFlowCalendarState {
     endTime: Dayjs | null;
     challengeArea: string;
     eventType: string;
-    selectedCalendarId: string;
+    selectedInviteeId: string;
   };
   isCreatingEvent: boolean;
   isDeletingEvent: boolean;
@@ -169,7 +169,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         endTime: null,
         challengeArea: 'not_applicable',
         eventType: 'unit',
-        selectedCalendarId: '',
+        selectedInviteeId: '',
       },
       isCreatingEvent: false,
       isDeletingEvent: false,
@@ -301,6 +301,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       const data = await fetchMemberEvents(startDate, endDate);
       const items = data.map((item) => new TerraFlowCalendarItem(item));
       this.setState({ items }, () => {
+        // Ensure calendar selections are preserved after fetching new data
         this.updateFilteredEvents();
       });
       this.props.onUpdate(items);
@@ -311,67 +312,36 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
 
   // Utility function to check if an event matches a calendar
   private mapEventToCalendars = (item: TerraFlowCalendarItem): string[] => {
-    const matchingCalendarIds: string[] = [];
+    const matchingInviteeIds: string[] = [];
     
-    this.state.allCalendars.forEach(calendar => {
-      // Direct group_id match
-      if (calendar.id === item.event.group_id) {
-        matchingCalendarIds.push(calendar.id);
+    // Simple and reliable: Use invitee_id to match calendar IDs directly
+    if (item.event.invitee_id) {
+      const directMatch = this.state.allCalendars.find(cal => cal.id === item.event.invitee_id);
+      if (directMatch) {
+        matchingInviteeIds.push(item.event.invitee_id);
       }
-      
-      // Match by invitee_name
-      if (calendar.name.toLowerCase().includes(item.event.invitee_name.toLowerCase()) ||
-          item.event.invitee_name.toLowerCase().includes(calendar.name.toLowerCase())) {
-        matchingCalendarIds.push(calendar.id);
-      }
-      
-      // Special matching for Leaders calendar
-      if (calendar.name.toLowerCase() === 'ldrs' || calendar.name.toLowerCase() === 'leaders') {
-        const eventTitle = item.Subject.toLowerCase();
-        const inviteeName = item.event.invitee_name.toLowerCase();
-        const eventSection = item.event.section.toLowerCase();
-        
-        if (eventTitle.includes('leader') || 
-            inviteeName.includes('leader') ||
-            eventTitle.includes('ldrs') ||
-            inviteeName.includes('ldrs') ||
-            eventSection === 'leader' ||
-            eventSection === 'adult' ||
-            item.event.invitee_type === 'adult') {
-          matchingCalendarIds.push(calendar.id);
-        }
-      }
-      
-      // Match by section
-      const calendarSection = calendar.name.toLowerCase();
-      const eventSection = item.event.section.toLowerCase();
-      
-      if ((calendarSection.includes('joey') && eventSection === 'joey') ||
-          (calendarSection.includes('cub') && eventSection === 'cub') ||
-          (calendarSection.includes('scout') && eventSection === 'scout') ||
-          (calendarSection.includes('venturer') && eventSection === 'venturer') ||
-          (calendarSection.includes('rover') && eventSection === 'rover')) {
-        matchingCalendarIds.push(calendar.id);
-      }
-    });
+    }
     
-    return Array.from(new Set(matchingCalendarIds));
+    return matchingInviteeIds;
   };
 
   // Convert TerraFlowCalendarItem to React Big Calendar event format
   convertToCalendarEvents = (): Event[] => {
-    const selectedCalendarIds = this.state.allCalendars
+    const selectedInviteeIds = this.state.allCalendars
       .filter((c) => c.selected)
       .map((c) => c.id);
 
     // If no calendars are selected, show no events
-    if (selectedCalendarIds.length === 0) {
+    if (selectedInviteeIds.length === 0) {
       return [];
     }
 
+    const events: Event[] = [];
+    const cubsInviteeId = 'c6ef46a6-5910-4521-8306-3d0a2f327152';
+
     const filteredItems = this.state.items.filter((item) => {
-      const eventCalendarIds = this.mapEventToCalendars(item);
-      return eventCalendarIds.some(eventCalId => selectedCalendarIds.includes(eventCalId));
+      const eventInviteeIds = this.mapEventToCalendars(item);
+      return eventInviteeIds.some(eventInviteeId => selectedInviteeIds.includes(eventInviteeId));
     });
 
     return filteredItems.map((item) => {
@@ -503,15 +473,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     const location = fullEvent?.location || '';
     const description = fullEvent?.description || '';
     
-    // Try to determine the calendar ID from various fields
-    let selectedCalendarId = '';
-    if ((fullEvent as any)?.event_type?.id) {
-      selectedCalendarId = (fullEvent as any).event_type.id;
-    } else if ((calendarItem.event as any).calendar_id) {
-      selectedCalendarId = (calendarItem.event as any).calendar_id;
-    } else if (calendarItem.event.invitee_id) {
-      selectedCalendarId = calendarItem.event.invitee_id;
-    }
+    // Use invitee_id as the authoritative calendar ID
+    const selectedInviteeId = calendarItem.event.invitee_id || '';
     
     // Go directly to edit mode when clicking on an event
     this.setState({ 
@@ -527,7 +490,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         endTime: dayjs(calendarItem.EndTime),
         challengeArea: challengeArea,
         eventType: eventType,
-        selectedCalendarId: selectedCalendarId,
+        selectedInviteeId: selectedInviteeId,
       }
     });
   };
@@ -548,20 +511,20 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     const endTime = dayjs(startTime).add(defaultDuration, 'minutes');
     
     // Use the saved default calendar, or fall back to previous logic
-    let selectedCalendarId = '';
+    let selectedInviteeId = '';
     if (defaultCalendar) {
       // Check if the saved default calendar still exists in available calendars
       const savedCalendar = this.state.allCalendars.find(cal => cal.id === defaultCalendar);
       if (savedCalendar) {
-        selectedCalendarId = defaultCalendar;
+        selectedInviteeId = defaultCalendar;
       }
     }
     
     // If no saved default or it doesn't exist, use fallback logic
-    if (!selectedCalendarId) {
+    if (!selectedInviteeId) {
       const fallbackCalendar = this.state.allCalendars.find(cal => cal.name.toLowerCase().includes('ldrs')) 
         || this.state.allCalendars[0];
-      selectedCalendarId = fallbackCalendar?.id || '';
+      selectedInviteeId = fallbackCalendar?.id || '';
     }
     
     this.setState({ 
@@ -574,7 +537,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         endDate: endMoment,
         endTime: endTime,
         location: defaultLocation,
-        selectedCalendarId: selectedCalendarId,
+        selectedInviteeId: selectedInviteeId,
       }
     });
   };
@@ -599,7 +562,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       return;
     }
 
-    if (!newEventForm.selectedCalendarId) {
+    if (!newEventForm.selectedInviteeId) {
       message.error('Please select a calendar for the event');
       return;
     }
@@ -608,9 +571,9 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     this.setState({ isCreatingEvent: true });
 
     try {
-      const selectedCalendar = this.state.allCalendars.find(cal => cal.id === newEventForm.selectedCalendarId);
+      const selectedCalendar = this.state.allCalendars.find(cal => cal.id === newEventForm.selectedInviteeId);
       const calendarType = selectedCalendar?.type || 'unit';
-      const result = await createNewEvent(JSON.stringify(eventToUpload), newEventForm.selectedCalendarId, calendarType);
+      const result = await createNewEvent(JSON.stringify(eventToUpload), newEventForm.selectedInviteeId, calendarType);
       if (result) {
         message.error('Failed to create event: ' + JSON.stringify(result));
       } else {
@@ -714,18 +677,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       // Fetch full event details to get all the necessary data
       const fullEvent = await fetchActivity(selectedEvent.Id);
       
-      // Determine the original calendar ID using the same logic as event editing
-      let originalCalendarId = '';
-      if ((fullEvent as any)?.event_type?.id) {
-        originalCalendarId = (fullEvent as any).event_type.id;
-      } else if ((selectedEvent.event as any).calendar_id) {
-        originalCalendarId = (selectedEvent.event as any).calendar_id;
-      } else if (selectedEvent.event.invitee_id) {
-        originalCalendarId = selectedEvent.event.invitee_id;
-      } else {
-        // Final fallback - use current unit ID
-        originalCalendarId = TerrainState.getUnitID();
-      }
+      // Use invitee_id as the authoritative calendar ID, fallback to current unit
+      const originalInviteeId = selectedEvent.event.invitee_id || TerrainState.getUnitID();
       
       // Create a complete event payload using the same structure as new events
       const eventToUpload = {
@@ -737,11 +690,11 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         challenge_area: selectedEvent.event.challenge_area,
         event_type: { 
           type: selectedEvent.event.invitee_type || 'unit',
-          id: originalCalendarId  // Use the preserved original calendar ID
+          id: originalInviteeId  // Use the preserved original invitee ID
         },
         type: selectedEvent.event.invitee_type || 'unit',
         invitees: [{
-          invitee_id: originalCalendarId,  // Use the preserved original calendar ID
+          invitee_id: originalInviteeId,  // Use the preserved original invitee ID
           invitee_type: selectedEvent.event.invitee_type || 'unit'
         }],
         iana_timezone: "Australia/Brisbane",
@@ -780,7 +733,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       await deleteEvent(selectedEvent.Id);
       await createNewEvent(
         JSON.stringify(eventToUpload), 
-        originalCalendarId, 
+        originalInviteeId, 
         selectedEvent.event.invitee_type || 'unit'
       );
       
@@ -828,6 +781,9 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     
     // Then sync to server
     updateMemberCalendars(JSON.stringify(calendarUpdate))
+      .then(() => {
+        // Calendar selection saved successfully
+      })
       .catch((error) => {
         console.error('Error updating calendar selection:', error);
       });
@@ -848,7 +804,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         endTime: null,
         challengeArea: 'not_applicable',
         eventType: 'unit',
-        selectedCalendarId: '',
+        selectedInviteeId: '',
       }
     });
   };
@@ -1098,12 +1054,12 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
               <Form.Item 
                 label="Calendar" 
                 required
-                validateStatus={!this.state.newEventForm.selectedCalendarId ? 'error' : ''}
-                help={!this.state.newEventForm.selectedCalendarId ? 'Please select a calendar' : ''}
+                validateStatus={!this.state.newEventForm.selectedInviteeId ? 'error' : ''}
+                help={!this.state.newEventForm.selectedInviteeId ? 'Please select a calendar' : ''}
               >
                 <Select
-                  value={this.state.newEventForm.selectedCalendarId}
-                  onChange={(value) => this.handleFormFieldChange('selectedCalendarId', value)}
+                  value={this.state.newEventForm.selectedInviteeId}
+                  onChange={(value) => this.handleFormFieldChange('selectedInviteeId', value)}
                   style={{ width: '100%' }}
                   placeholder="Select calendar"
                 >
