@@ -11,6 +11,19 @@ import { TerrainState } from "@/helpers";
 
 const localizer = momentLocalizer(moment);
 
+// React Big Calendar display formats (use DD/MM/YYYY for dates)
+const rbcFormats: any = {
+  agendaDateFormat: (date: Date) => moment(date).format('DD/MM/YYYY'),
+  agendaTimeFormat: (date: Date) => moment(date).format('HH:mm'),
+  // Ensure React Big Calendar uses DD/MM/YYYY where it displays dates
+  dateFormat: 'DD/MM/YYYY',
+  dayFormat: (date: Date) => moment(date).format('DD/MM/YYYY'),
+  // dayRangeHeaderFormat used by month/week/day header rendering
+  dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) => `${moment(start).format('DD/MM/YYYY')} – ${moment(end).format('DD/MM/YYYY')}`,
+  // Agenda header can be covered by dayRangeHeaderFormat, but set anyway
+  agendaHeaderFormat: ({ start, end }: { start: Date; end: Date }) => `${moment(start).format('DD/MM/YYYY')} – ${moment(end).format('DD/MM/YYYY')}`,
+};
+
 // Default event settings helper functions
 const getDefaultEventSettings = () => {
   const defaultStartTime = localStorage.getItem('terraflow_event_startTime') || '19:00';
@@ -147,6 +160,9 @@ interface TerraFlowCalendarState {
   };
   isCreatingEvent: boolean;
   isDeletingEvent: boolean;
+  currentView?: View;
+  agendaRange?: [Dayjs, Dayjs];
+  locationCache?: { [id: string]: string };
 }
 
 export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalendarProps, TerraFlowCalendarState> {
@@ -167,7 +183,9 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       filteredEvents: [],
       calendarKey: 0,
       startingDayOfWeek: parseInt(localStorage.getItem('terraflow_event_startingDayOfWeek') || '1'), // Monday
-      currentDate: new Date(),
+  currentDate: new Date(),
+  currentView: 'month',
+  agendaRange: [dayjs().startOf('month'), dayjs().endOf('month')],
       newEventForm: {
         title: '',
         description: '',
@@ -182,8 +200,29 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       },
       isCreatingEvent: false,
       isDeletingEvent: false,
+      locationCache: {},
     };
   }
+
+  // Keep track of in-flight location fetches to avoid duplicates
+  private loadingLocations: Set<string> = new Set();
+
+  loadLocation = async (eventId: string) => {
+    if (!eventId) return;
+    if (this.state.locationCache && this.state.locationCache[eventId] !== undefined) return;
+    if (this.loadingLocations.has(eventId)) return;
+    this.loadingLocations.add(eventId);
+    try {
+      const full = await fetchActivity(eventId);
+      const location = full?.location || '';
+      this.setState({ locationCache: { ...(this.state.locationCache || {}), [eventId]: location } });
+    } catch (err) {
+      console.error('Error loading activity for location', eventId, err);
+      this.setState({ locationCache: { ...(this.state.locationCache || {}), [eventId]: '' } });
+    } finally {
+      this.loadingLocations.delete(eventId);
+    }
+  };
 
   // Update moment locale to use the configured starting day of week
   updateMomentLocale = () => {
@@ -235,6 +274,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       }, 200);
     }
   }
+
+  
 
   handleEventSettingsChange = (event: Event) => {
     // Force re-render when settings change
@@ -365,7 +406,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       
       return {
         id: item.Id,
-        title: item.Subject,
+        title: item.Subject || '',
         start: start,
         end: end,
         allDay: false,
@@ -458,6 +499,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     };
   };
 
+  
+
   // React Big Calendar event handlers
   onNavigate = (date: Date) => {
     this.setState({ currentDate: date });
@@ -465,7 +508,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
   };
 
   onView = (view: View) => {
-    // Handle view changes if needed
+    // Track current view so we can show agenda-specific controls
+    this.setState({ currentView: view });
   };
 
   onSelectEvent = async (event: any) => {
@@ -490,7 +534,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       selectedEvent: calendarItem,
       isModalVisible: true,
       newEventForm: {
-        title: calendarItem.event.title,
+        title: calendarItem.event.title || '',
         description: description,
         location: location,
         startDate: moment(calendarItem.StartTime),
@@ -668,6 +712,27 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     });
   };
 
+  // Confirmation for marking an event as concluded
+  confirmMarkConcluded = () => {
+    const { selectedEvent } = this.state;
+    if (!selectedEvent) {
+      message.error('No event selected');
+      return;
+    }
+
+    Modal.confirm({
+      title: 'Mark Event as Concluded',
+      content: `Are you sure you want to mark "${selectedEvent.Subject}" as concluded? This cannot be undone.`,
+      okText: 'Mark as Concluded',
+      okType: 'primary',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        // Delegate to existing handler which performs the update
+        await this.handleToggleCompletion();
+      }
+    });
+  };
+
   handleToggleCompletion = async () => {
     const { selectedEvent } = this.state;
     
@@ -676,9 +741,11 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       return;
     }
 
-  const currentStatus = selectedEvent.event.status;
-  const newStatus = currentStatus === "concluded" ? "planned" : "concluded";
-  const actionText = newStatus === "concluded" ? "concluded" : "planned";
+    const currentStatus = selectedEvent.event.status;
+    const newStatus = currentStatus === "concluded" ? "planned" : "concluded";
+    const actionText = newStatus === "concluded" ? "concluded" : "planned";
+
+    
 
     this.setState({ isCreatingEvent: true });
 
@@ -698,7 +765,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       };
       
       // Create a complete event payload using the same structure as new events
-      const eventToUpload = {
+      const eventToUpload: any = {
         title: selectedEvent.event.title,
         description: fullEvent?.description || '',
         location: fullEvent?.location || '',
@@ -716,7 +783,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         }],
         iana_timezone: "Australia/Brisbane",
         status: newStatus,
-  organisers: [TerrainState.getMemberID()],
+        organisers: [TerrainState.getMemberID()],
         attendance: {
           leader_member_ids: [],
           assistant_member_ids: [],
@@ -739,7 +806,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
           groups: [],
         },
         review: reviewData,
-  // justification removed to avoid unwanted status message
+        // justification removed to avoid unwanted status message
       };
 
       // Update the event status using updateEvent (PATCH)
@@ -930,7 +997,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                   color: "white"
                 }}
                 loading={this.state.isCreatingEvent}
-                onClick={this.handleToggleCompletion}
+                onClick={this.confirmMarkConcluded}
               >
                 Mark as Concluded
               </Button>,
@@ -1004,7 +1071,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                 </Form.Item>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <Form.Item label="Start Date">
-                    <DatePicker value={this.state.newEventForm.startDate} disabled style={{ width: '100%' }} />
+                    <DatePicker value={this.state.newEventForm.startDate} disabled style={{ width: '100%' }} format="DD/MM/YYYY" />
                   </Form.Item>
                   <Form.Item label="Start Time">
                     <TimePicker value={this.state.newEventForm.startTime} disabled style={{ width: '100%' }} />
@@ -1012,7 +1079,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <Form.Item label="End Date">
-                    <DatePicker value={this.state.newEventForm.endDate} disabled style={{ width: '100%' }} />
+                    <DatePicker value={this.state.newEventForm.endDate} disabled style={{ width: '100%' }} format="DD/MM/YYYY" />
                   </Form.Item>
                   <Form.Item label="End Time">
                     <TimePicker value={this.state.newEventForm.endTime} disabled style={{ width: '100%' }} />
@@ -1167,12 +1234,27 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
 
 
   render(): React.ReactNode {
-    // Use the pre-computed filtered events from state
-    const events = [...this.state.filteredEvents];
+    // Compute events filtered by agendaRange when in agenda view
+    let events = [...this.state.filteredEvents];
+    let agendaLengthDays: number | undefined;
+    let calendarDate = this.state.currentDate;
+    if (this.state.currentView === 'agenda' && this.state.agendaRange && this.state.agendaRange[0] && this.state.agendaRange[1]) {
+      const aStart = this.state.agendaRange[0].startOf('day');
+      const aEnd = this.state.agendaRange[1].endOf('day');
+  // React Big Calendar's agenda `length` is end-exclusive (start + length = end date displayed),
+  // so compute as difference in days without adding 1.
+  agendaLengthDays = this.state.agendaRange[1].diff(this.state.agendaRange[0], 'day');
+      calendarDate = this.state.agendaRange[0].toDate();
+      events = events.filter(ev => {
+        const s = dayjs((ev as any).start);
+        const e = dayjs((ev as any).end || (ev as any).start);
+        return !(s.isAfter(aEnd) || e.isBefore(aStart));
+      });
+    }
     
     return (
-      <div id="scheduler" style={{ width: "100%", height: "100%" }}>
-        <div style={{ marginBottom: 16 }}>
+      <div id="scheduler" className={this.state.currentView === 'agenda' ? 'agenda-mode' : ''} style={{ width: "100%", height: "100%" }}>
+  <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
           <label>Select Calendars: </label>
           <TreeSelect
             style={{ width: 300, marginLeft: 8 }}
@@ -1212,35 +1294,146 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
             }}
             allowClear
           />
+          {this.state.currentView === 'agenda' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label style={{ marginRight: 4 }}>Agenda range:</label>
+              <DatePicker.RangePicker
+                value={this.state.agendaRange as [Dayjs, Dayjs]}
+                onChange={(val) => {
+                  if (val && val[0] && val[1]) {
+                    this.setState({ agendaRange: [val[0], val[1]], currentDate: val[0].toDate() });
+                    // Update calendar key so the calendar refreshes when range changes
+                    this.setState({ calendarKey: this.state.calendarKey + 1 });
+                  }
+                }}
+                style={{ marginLeft: 0 }}
+                format="DD/MM/YYYY"
+              />
+            </div>
+          )}
         </div>
         
-        <Calendar
-          key={`calendar-${this.state.calendarKey}-${events.length}`}
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          titleAccessor="title"
-          style={{ height: "calc(100% - 60px)" }}
-          date={this.state.currentDate}
-          onNavigate={this.onNavigate}
-          onView={this.onView}
-          onSelectEvent={this.onSelectEvent}
-          onSelectSlot={this.onSelectSlot}
-          selectable
-          eventPropGetter={this.eventStyleGetter}
-          views={{
-            month: true,
-            week: true,
-            day: true,
-            agenda: true
-          }}
-          defaultView="month"
-          step={30}
-          showMultiDayTimes
-          max={moment().hour(23).minute(59).toDate()}
-          min={moment().hour(0).minute(0).toDate()}
-        />
+          <Calendar
+            key={`calendar-${this.state.calendarKey}-${events.length}`}
+            localizer={localizer}
+            // Control the active view from component state so the UI updates immediately
+            view={this.state.currentView as View}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            titleAccessor="title"
+            style={{ height: this.state.currentView === 'agenda' ? 'auto' : "calc(100% - 60px)" }}
+            // Use agenda range start as calendar date when in agenda view so header matches picker
+            date={calendarDate}
+            onNavigate={this.onNavigate}
+            onView={this.onView}
+            onSelectEvent={this.onSelectEvent}
+            onSelectSlot={this.onSelectSlot}
+            selectable
+            eventPropGetter={this.eventStyleGetter}
+            views={{
+              month: true,
+              week: true,
+              day: true,
+              agenda: true
+            }}
+            defaultView="month"
+            step={30}
+            showMultiDayTimes
+            // For agenda view, set the number of days to display equal to the selected agenda range
+            {...(agendaLengthDays ? { length: agendaLengthDays } : {})}
+            // Only supply custom formats for the agenda view so month/week/day use the library defaults
+            {...(this.state.currentView === 'agenda' ? { formats: rbcFormats } : {})}
+            max={moment().hour(23).minute(59).toDate()}
+            min={moment().hour(0).minute(0).toDate()}
+          />
+
+        {this.state.currentView === 'agenda' && (
+          <div style={{ overflow: 'auto', padding: 8 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '120px' }} />
+                <col style={{ width: '160px' }} />
+                <col style={{ width: '1fr' }} />
+                <col style={{ width: '220px' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Date</th>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Time</th>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Event</th>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Location</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  // Create a sorted copy of events for agenda rendering: primary sort by start date, secondary by calendar/invitee name, tertiary by title
+                  const sorted = [...events].sort((a: any, b: any) => {
+                    const aStart = new Date(a.start).getTime();
+                    const bStart = new Date(b.start).getTime();
+                    if (aStart !== bStart) return aStart - bStart;
+
+                    const aRes = a.resource || {};
+                    const bRes = b.resource || {};
+                    const aCal = (aRes.event && (aRes.event.invitee_name || aRes.event.invitee_id)) || '';
+                    const bCal = (bRes.event && (bRes.event.invitee_name || bRes.event.invitee_id)) || '';
+                    const aCalLower = String(aCal).toLowerCase();
+                    const bCalLower = String(bCal).toLowerCase();
+                    if (aCalLower < bCalLower) return -1;
+                    if (aCalLower > bCalLower) return 1;
+
+                    const aTitle = (a.title || '').toLowerCase();
+                    const bTitle = (b.title || '').toLowerCase();
+                    if (aTitle < bTitle) return -1;
+                    if (aTitle > bTitle) return 1;
+                    return 0;
+                  });
+
+                  return sorted.map((ev: any) => {
+                  const start = moment(ev.start);
+                  const end = moment(ev.end || ev.start);
+                  const date = start.format('DD/MM/YYYY');
+                  const time = ev.allDay ? 'all day' : `${start.format('h:mm a')} – ${end.format('h:mm a')}`;
+                  const resource = ev.resource as TerraFlowCalendarItem | any;
+                  let location = resource?.event?.location || resource?.location || resource?.Location || '';
+                  // If not present in summary, try cached full-activity location; otherwise trigger a load
+                  if (!location) {
+                    const cached = this.state.locationCache && resource && resource.event && this.state.locationCache[resource.event.id];
+                    if (cached !== undefined) {
+                      location = cached;
+                    } else if (resource && resource.event && resource.event.id) {
+                      // Kick off an async load (no await) — this will update state when done
+                      this.loadLocation(resource.event.id);
+                    }
+                  }
+                  const color = (resource && resource.color) || '#3174ad';
+                  return (
+                    <tr
+                      key={ev.id}
+                      style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', cursor: 'pointer' }}
+                      tabIndex={0}
+                      onClick={() => this.onSelectEvent(ev)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.onSelectEvent(ev); } }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
+                    >
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{date}</td>
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{time}</td>
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 10, height: 10, display: 'inline-block', backgroundColor: color, borderRadius: 2 }}></span>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.title}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{location}</td>
+                    </tr>
+                  );
+                  });
+                })()}
+              </tbody>
+            </table>
+          </div>
+        )}
         
         {this.renderEventModal()}
 

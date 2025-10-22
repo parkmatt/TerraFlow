@@ -159,7 +159,37 @@ nav .v-list-item[style*="background"][data-terraflow="true"],
 }
 
 .rbc-agenda-view {
-  min-height: 500px;
+  min-height: 0 !important;
+}
+
+/* When using custom agenda table, shrink the calendar container so toolbar and table sit together */
+.rbc-calendar.rbc-agenda-view {
+  padding-bottom: 0;
+}
+
+/* Strong overrides when our container is in agenda-mode */
+#scheduler.agenda-mode {
+  display: block;
+}
+
+#scheduler.agenda-mode .rbc-calendar {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+#scheduler.agenda-mode .rbc-agenda-view,
+#scheduler.agenda-mode .rbc-month-view,
+#scheduler.agenda-mode .rbc-time-view {
+  min-height: 0 !important;
+}
+
+#scheduler.agenda-mode .rbc-agenda-view .rbc-agenda-table,
+#scheduler.agenda-mode .rbc-agenda-view .rbc-agenda-content {
+  display: none !important; /* hide built-in agenda content */
+}
+
+#scheduler.agenda-mode .rbc-toolbar {
+  margin-bottom: 6px !important;
 }
 
 .rbc-agenda-view table.rbc-agenda-table {
@@ -183,6 +213,16 @@ nav .v-list-item[style*="background"][data-terraflow="true"],
 
 .rbc-toolbar {
   margin-bottom: 10px;
+}
+
+/* Hide the default agenda list rows when we'll render our custom table below the calendar */
+.rbc-agenda-view .rbc-agenda-table {
+  display: none;
+}
+
+/* Ensure the toolbar (view buttons) stays visible and doesn't get hidden by layout changes */
+.rbc-toolbar {
+  z-index: 2;
 }
 
 .rbc-btn-group {
