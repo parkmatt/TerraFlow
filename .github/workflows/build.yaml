@@ -44,8 +44,8 @@ jobs:
       run: |
         npm install -g webpack @types/jest jest typescript webpack-cli npm-run-all
         npm ci
-        
-  - name: Build TerraFlow
+    
+    - name: Build TerraFlow
       run: |
         mkdir -p ./dist
         npx webpack --config webpack.config.js --mode production
