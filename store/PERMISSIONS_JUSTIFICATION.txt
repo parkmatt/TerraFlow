@@ -1,0 +1,17 @@
+Permissions justification for Chrome Web Store review
+
+Permissions requested:
+- activeTab: Required to inject TerraFlow UI and loader when the user is on the Terrain site.
+- scripting: Used to programmatically inject extension scripts/styles into the active Terrain page.
+- host_permissions: https://terrain.scouts.com.au/*, https://events.terrain.scouts.com.au/*, https://members.terrain.scouts.com.au/*
+
+Why these are needed:
+- The extension augments the Terrain web application in-page. To render the UI overlay and add in-context controls, TerraFlow injects packaged JavaScript and CSS into Terrain pages.
+- The extension needs to fetch and modify event and member data by calling Terrain's REST APIs. Those calls are performed only in response to explicit user actions in TerraFlow and use the user's existing Terrain session for authentication.
+
+Privacy/security assurances:
+- TerraFlow does not execute code fetched from remote hosts; all injected scripts are packaged with the extension.
+- No analytics, telemetry, or off-device storage of user data is performed by the extension.
+- Local settings are saved only to browser `localStorage` under keys prefixed with `terraflow_event_`.
+
+Privacy policy URL: https://raw.githubusercontent.com/parkmatt/TerraFlow/main/PRIVACY.md

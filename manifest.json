@@ -28,6 +28,11 @@
         }
       ],
     "permissions": ["activeTab", "scripting"],
+    "host_permissions": [
+        "https://terrain.scouts.com.au/*",
+        "https://events.terrain.scouts.com.au/*",
+        "https://members.terrain.scouts.com.au/*"
+    ],
     "content_security_policy": {
         "extension_pages": "default-src 'self'"
       }
