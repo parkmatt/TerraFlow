@@ -45,7 +45,7 @@ jobs:
         npm install -g webpack @types/jest jest typescript webpack-cli npm-run-all
         npm ci
         
-    - name: Build Summit
+  - name: Build TerraFlow
       run: |
         mkdir -p ./dist
         npx webpack --config webpack.config.js --mode production
@@ -54,5 +54,5 @@ jobs:
     - name: Upload web extension as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Summit
+        name: TerraFlow
         path: dist/*
