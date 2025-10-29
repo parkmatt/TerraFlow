@@ -13,7 +13,7 @@
     "terraflow",
     "contour"
   ],
-  "author": "TerraFlow Team (Built on Summit by Peter McDonald)",
+  "author": "TerraFlow Team (Originally based on Summit by Peter McDonald)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/parkmatt/TerraFlow/issues"
