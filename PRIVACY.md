@@ -28,14 +28,7 @@ Security and storage
 Contact and hosting
 - If you have privacy questions, please open an issue in the repository or contact the maintainer via the repository contact details.
 
-Hosting suggestion for the Chrome Web Store
-- To provide a stable Privacy Policy URL, host this file as an HTML page. Options:
-  - GitHub Pages: Enable Pages for the repository and publish the file as `https://<username>.github.io/<repo>/PRIVACY.html`.
-  - Raw GitHub link (less pretty): `https://raw.githubusercontent.com/<username>/<repo>/main/PRIVACY.md` (Chrome accepts raw URLs but HTML is preferred).
-
-Example ready-to-use URL (replace `<username>` / `<repo>` with real values)
-- GitHub Pages (recommended): https://parkmatt.github.io/TerraFlow/PRIVACY.html
-- Raw Markdown (fallback): https://raw.githubusercontent.com/parkmatt/TerraFlow/main/PRIVACY.md
+This privacy policy is published at: https://raw.githubusercontent.com/parkmatt/TerraFlow/main/PRIVACY.md
 
 Date and changes
 - This policy was created on 2025-10-23. If the extension's data collection changes, this file should be updated accordingly and the Web Store listing updated with the new URL/version.
