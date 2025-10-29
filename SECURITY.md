@@ -35,15 +35,11 @@ When reporting a vulnerability, please include:
 - Any relevant logs, screenshots, or environment details
 
 
-## Response Targets
+## Response
 
-We aim to:
+Because TerraFlow is a small project maintained by a very small team, we cannot guarantee any specific response time or that reports will be fixed. We appreciate vulnerability reports and will review them as resources allow; we will attempt to address confirmed issues when possible.
 
-- Acknowledge receipt within 3 business days
-- Provide a preliminary triage within 7 business days
-- Work with the reporter on an appropriate fix or mitigation; timeframe depends on severity and complexity
-
-If a fix requires coordination with third parties (e.g., backend/API owners), we will clearly communicate expected timelines.
+If a fix requires coordination with third parties (e.g., backend/API owners), we may not be able to resolve it directly but will provide guidance where feasible.
 
 
 ## Disclosure and CVE
