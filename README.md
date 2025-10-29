@@ -1,8 +1,8 @@
 # TerraFlow
 TerraFlow is a browser extension that enhances the Scouts | Terrain website with improved calendar management and event flow optimisation.
 
-## Built on Summit
-This project was based on the excellent open source [Summit project](https://github.com/pete-mc/Summit) by Peter McDonald.
+## Acknowledgements
+This project was originally based on the excellent open source [Summit project](https://github.com/pete-mc/Summit) by Peter McDonald. Summit provided the initial foundation; TerraFlow is maintained independently.
 
 ## Key Features
 

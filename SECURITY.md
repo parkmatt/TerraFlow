@@ -10,4 +10,4 @@
 
 Report security issues via [GitHub Issues]
 
-Built on the open source [Summit project](https://github.com/pete-mc/Summit).
+Originally based on the open source [Summit project](https://github.com/pete-mc/Summit).
