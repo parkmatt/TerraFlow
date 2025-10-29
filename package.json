@@ -1,6 +1,6 @@
 {
   "name": "terrain-terraflow",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "TerraFlow - Enhance Terrain event management",
   "main": "terraflow.js",
   "repository": {

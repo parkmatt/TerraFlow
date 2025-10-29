@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Terrain | TerraFlow",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "description": "Make Terrain events flow",
     "icons": {
         "16": "/images/Icon16.png",
