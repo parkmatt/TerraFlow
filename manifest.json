@@ -27,7 +27,6 @@
           "matches": ["https://terrain.scouts.com.au/*"]
         }
       ],
-    "permissions": ["activeTab", "scripting"],
     "host_permissions": [
         "https://terrain.scouts.com.au/*",
         "https://events.terrain.scouts.com.au/*",
