@@ -93,13 +93,30 @@ export default class TerraFlowRouter {
       gap: 6px;
     `;
     
-    // Create icon using Unicode symbol instead of SVG
-    const icon = document.createElement('span');
-    icon.textContent = '⚜️';
-    icon.style.cssText = `
-      font-size: 14px;
-      opacity: 0.8;
-    `;
+    // Create icon: prefer the packaged TerraFlow image (icons in src/images) via chrome.runtime.getURL,
+    // fall back to a simple text glyph if runtime API isn't available (e.g., page context).
+    let icon: HTMLElement;
+    try {
+      const extChrome = (window as any).chrome;
+      if (extChrome && extChrome.runtime && typeof extChrome.runtime.getURL === 'function') {
+        const img = document.createElement('img');
+        img.src = extChrome.runtime.getURL('images/Icon16.png');
+        img.alt = 'TerraFlow';
+        img.style.cssText = `width:16px;height:16px;opacity:0.9;display:inline-block;vertical-align:middle;`;
+        icon = img;
+      } else {
+        // Fallback glyph when chrome.runtime isn't available
+        const span = document.createElement('span');
+        span.textContent = 'TF';
+        span.style.cssText = `font-size:14px;font-weight:600;opacity:0.85;`;
+        icon = span;
+      }
+    } catch (e) {
+      const span = document.createElement('span');
+      span.textContent = 'TF';
+      span.style.cssText = `font-size:14px;font-weight:600;opacity:0.85;`;
+      icon = span;
+    }
     
     trigger.appendChild(icon);
     trigger.appendChild(document.createTextNode('TerraFlow'));
