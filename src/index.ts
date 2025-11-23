@@ -44,24 +44,52 @@ $(function () {
     }
   };
 
+  // Handle SPA navigation: initialize on Terrain pages, destroy when leaving to login/auth
+  const handleSpaNavigation = () => {
+    if (isTerrainPage()) {
+      initializeOnValidPage();
+    } else {
+      try {
+        TerraFlowRouter.destroyInstance();
+        console.log('TerraFlow: Destroyed due to navigation to non-Terrain page');
+      } catch (e) {
+        // ignore
+      }
+    }
+  };
   // Check if this is a Terrain page where TerraFlow should load
   if (!isTerrainPage()) {
     console.log('TerraFlow: Not on a valid Terrain page, waiting for navigation...');
-    
-    // Listen for navigation changes
-    window.addEventListener('popstate', initializeOnValidPage);
-    
-    // Also check periodically in case of programmatic navigation
+
+    // Support SPA navigation: wrap history methods to emit a "locationchange" event
+    (function() {
+      const _wr = (type: 'pushState' | 'replaceState') => {
+        const orig = (history as any)[type];
+        return function(this: any, ...args: any[]) {
+          const res = orig.apply(this, args);
+          window.dispatchEvent(new Event('locationchange'));
+          return res;
+        };
+      };
+      (history as any).pushState = _wr('pushState');
+      (history as any).replaceState = _wr('replaceState');
+    })();
+
+    // Listen for navigation changes (back/forward) and our custom locationchange
+  window.addEventListener('popstate', handleSpaNavigation);
+  window.addEventListener('locationchange', handleSpaNavigation as EventListener);
+
+    // Also check periodically in case navigation happens without history events
     const checkInterval = setInterval(() => {
       if (isTerrainPage()) {
         clearInterval(checkInterval);
         initializeOnValidPage();
       }
     }, 2000);
-    
-    // Stop checking after 30 seconds
-    setTimeout(() => clearInterval(checkInterval), 30000);
-    
+
+    // Stop checking after 2 minutes (longer to cover slow login flows)
+    setTimeout(() => clearInterval(checkInterval), 120000);
+
     return;
   }
 

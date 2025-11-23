@@ -252,6 +252,52 @@ export default class TerraFlowRouter {
     this.initNavMenu();
   }
 
+  /**
+   * Tear down any injected UI and remove menu items. This is used when navigating away
+   * from Terrain (for example, logging out and returning to the login page) so the
+   * extension does not remain visible.
+   */
+  private _destroy(): void {
+    try {
+      // Remove hover menu if present
+      const existing = document.getElementById('terraflow-hover-menu');
+      if (existing) {
+        existing.remove();
+      }
+
+      // Remove injected nav menu items from Terrain's nav component if possible
+      const app = (window as any).app || (window as any).$nuxt || (window as any).__VUE__;
+      const vueInstance = app?.$children ? app : ((window as any).$nuxt && (window as any).$nuxt.$root);
+      if (vueInstance) {
+        const navMenuComponent = FindComponent("NavMenu", vueInstance) as any;
+        if (navMenuComponent && navMenuComponent.items && Array.isArray(navMenuComponent.items)) {
+          navMenuComponent.items = navMenuComponent.items.filter((it: any) => {
+            return !this.terraflowNavMenuItems.some(tf => tf.title === it.title);
+          });
+          if (navMenuComponent.$forceUpdate) navMenuComponent.$forceUpdate();
+        }
+      }
+    } catch (error) {
+      // Ignore errors during destroy
+      console.warn('TerraFlow: destroy error', error);
+    }
+  }
+
+  /**
+   * Public helper to destroy the singleton instance and clean up injected UI.
+   */
+  public static destroyInstance(): void {
+    if (TerraFlowRouter.instance) {
+      try {
+        TerraFlowRouter.instance._destroy();
+      } catch (e) {
+        // swallow
+      }
+      // Reset the singleton so it can be re-created later
+      (TerraFlowRouter.instance as any) = undefined;
+    }
+  }
+
   private async initRoutes(): Promise<void> {
     try {
       // Get the actual Terrain router instance

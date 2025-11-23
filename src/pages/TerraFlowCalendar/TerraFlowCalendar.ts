@@ -47,11 +47,11 @@ export default defineComponent({
       this.root = createRoot(this.$refs.reactRoot as HTMLElement);
       this.renderReactComponent(this.items);
     },
-    renderReactComponent(items: TerraFlowCalendarItem[]) {
+    renderReactComponent(items: any[]) {
       const reactElement = React.createElement(TerraFlowCalendarComponent, {
-        items,
+        items: items as any,
         onUpdate: this.handleUpdate,
-      });
+      } as any);
       this.root?.render(reactElement);
     },
     unmountReactComponent() {
