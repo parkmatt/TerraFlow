@@ -57,12 +57,12 @@ $(function () {
       }
     }
   };
-  // Check if this is a Terrain page where TerraFlow should load
-  if (!isTerrainPage()) {
-    console.log('TerraFlow: Not on a valid Terrain page, waiting for navigation...');
-
-    // Support SPA navigation: wrap history methods to emit a "locationchange" event
-    (function() {
+  // Always ensure SPA navigation hooks are present so we can detect logout/navigation
+  // away from Terrain whether TerraFlow was initialized on page load or later.
+  (function ensureSpaHooks() {
+    try {
+      // Avoid double-wrapping
+      if ((window as any).__terraflow_history_wrapped) return;
       const _wr = (type: 'pushState' | 'replaceState') => {
         const orig = (history as any)[type];
         return function(this: any, ...args: any[]) {
@@ -73,25 +73,23 @@ $(function () {
       };
       (history as any).pushState = _wr('pushState');
       (history as any).replaceState = _wr('replaceState');
-    })();
+      window.addEventListener('popstate', handleSpaNavigation);
+      window.addEventListener('locationchange', handleSpaNavigation as EventListener);
+      (window as any).__terraflow_history_wrapped = true;
 
-    // Listen for navigation changes (back/forward) and our custom locationchange
-  window.addEventListener('popstate', handleSpaNavigation);
-  window.addEventListener('locationchange', handleSpaNavigation as EventListener);
-
-    // Also check periodically in case navigation happens without history events
-    const checkInterval = setInterval(() => {
-      if (isTerrainPage()) {
-        clearInterval(checkInterval);
-        initializeOnValidPage();
-      }
-    }, 2000);
-
-    // Stop checking after 2 minutes (longer to cover slow login flows)
-    setTimeout(() => clearInterval(checkInterval), 120000);
-
-    return;
-  }
+      // Also check periodically in case navigation happens without history events
+      const checkInterval = setInterval(() => {
+        if (isTerrainPage()) {
+          clearInterval(checkInterval);
+          initializeOnValidPage();
+        }
+      }, 2000);
+      // Stop checking after 2 minutes
+      setTimeout(() => clearInterval(checkInterval), 120000);
+    } catch (e) {
+      console.warn('TerraFlow: failed to install SPA hooks', e);
+    }
+  })();
 
   console.log('TerraFlow: On valid Terrain page, initializing immediately...');
   
