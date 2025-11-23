@@ -35,9 +35,12 @@ const getDefaultEventSettings = () => {
 };
 
 // Utility functions
-const formatDateTimeForAPI = (date: moment.Moment | null, time: Dayjs | null): string => {
+// Accept either a moment or dayjs date object (or a native Date) for UI state and convert to moment for API payloads
+const formatDateTimeForAPI = (date: any, time: Dayjs | null): string => {
   if (!date || !time) return '';
-  return moment(date)
+  // Normalize to a native Date object if possible (dayjs/moment both have toDate())
+  const nativeDate = typeof date.toDate === 'function' ? date.toDate() : date;
+  return moment(nativeDate)
     .hour(time.hour())
     .minute(time.minute())
     .utc()
@@ -150,9 +153,9 @@ interface TerraFlowCalendarState {
     title: string;
     description: string;
     location: string;
-    startDate: moment.Moment | null;
+    startDate: Dayjs | null;
     startTime: Dayjs | null;
-    endDate: moment.Moment | null;
+    endDate: Dayjs | null;
     endTime: Dayjs | null;
     challengeArea: string;
     eventType: string;
@@ -502,7 +505,43 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
   
 
   // React Big Calendar event handlers
-  onNavigate = (date: Date) => {
+  onNavigate = (date: Date, view?: View, action?: any) => {
+    // If we're in agenda view, interpret Prev/Next/Today to move whole months
+    const currentView = this.state.currentView;
+    const act = typeof action === 'string' ? action.toUpperCase() : (action && action.type ? String(action.type).toUpperCase() : null);
+
+    if (currentView === 'agenda') {
+      const currentRange = this.state.agendaRange && this.state.agendaRange[0] && this.state.agendaRange[1]
+        ? this.state.agendaRange
+        : [dayjs().startOf('month'), dayjs().endOf('month')];
+
+      let newStart = currentRange[0];
+      if (act === 'NEXT') {
+        newStart = currentRange[0].add(1, 'month').startOf('month');
+      } else if (act === 'PREV') {
+        newStart = currentRange[0].subtract(1, 'month').startOf('month');
+      } else if (act === 'TODAY') {
+        newStart = dayjs().startOf('month');
+      } else {
+        // Fallback: navigate to the provided date's month
+        newStart = dayjs(date).startOf('month');
+      }
+
+      const newEnd = newStart.endOf('month');
+      this.setState({
+        agendaRange: [newStart, newEnd],
+        currentDate: newStart.toDate(),
+        calendarKey: this.state.calendarKey + 1
+      }, () => {
+        // Fetch events for the new month and update filtered events
+        this.fetchDataForRange(this.state.currentDate);
+        this.updateFilteredEvents();
+      });
+
+      return;
+    }
+
+    // Default behaviour for other views
     this.setState({ currentDate: date });
     this.fetchDataForRange(date);
   };
@@ -537,9 +576,9 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
         title: calendarItem.event.title || '',
         description: description,
         location: location,
-        startDate: moment(calendarItem.StartTime),
+        startDate: dayjs(calendarItem.StartTime),
         startTime: dayjs(calendarItem.StartTime),
-        endDate: moment(calendarItem.EndTime),
+        endDate: dayjs(calendarItem.EndTime),
         endTime: dayjs(calendarItem.EndTime),
         challengeArea: challengeArea,
         eventType: eventType,
@@ -585,9 +624,9 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       isModalVisible: true,
       newEventForm: {
         ...this.state.newEventForm,
-        startDate: startMoment,
+        startDate: dayjs(startMoment.toDate()),
         startTime: startTime,
-        endDate: endMoment,
+        endDate: dayjs(endMoment.toDate()),
         endTime: endTime,
         location: defaultLocation,
         selectedInviteeId: selectedInviteeId,
@@ -1156,6 +1195,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                     onChange={(time) => this.handleFormFieldChange('startTime', time)}
                     style={{ width: '100%' }}
                     format="HH:mm"
+                    minuteStep={5}
+                    showSecond={false}
                   />
                 </Form.Item>
               </div>
@@ -1184,6 +1225,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                     onChange={(time) => this.handleFormFieldChange('endTime', time)}
                     style={{ width: '100%' }}
                     format="HH:mm"
+                    minuteStep={5}
+                    showSecond={false}
                   />
                 </Form.Item>
               </div>
