@@ -93,8 +93,9 @@ export default class TerraFlowRouter {
       gap: 6px;
     `;
     
-    // Create icon: prefer the packaged TerraFlow image (icons in src/images) via chrome.runtime.getURL,
-    // fall back to a simple text glyph if runtime API isn't available (e.g., page context).
+    // Create icon: prefer the packaged TerraFlow image. If `chrome.runtime.getURL` is
+    // available (content-script/extension context), use it. Otherwise derive the URL
+    // from the script tag that loaded this bundle (page-injected script) and use that.
     let icon: HTMLElement;
     try {
       const extChrome = (window as any).chrome;
@@ -105,11 +106,23 @@ export default class TerraFlowRouter {
         img.style.cssText = `width:16px;height:16px;opacity:0.9;display:inline-block;vertical-align:middle;`;
         icon = img;
       } else {
-        // Fallback glyph when chrome.runtime isn't available
-        const span = document.createElement('span');
-        span.textContent = 'TF';
-        span.style.cssText = `font-size:14px;font-weight:600;opacity:0.85;`;
-        icon = span;
+        // Derive base path from the current script tag (the loader injected the script with
+        // the extension URL). Fallback to a simple text glyph if that fails.
+        const scriptEl = (document.currentScript as HTMLScriptElement) ||
+          Array.from(document.getElementsByTagName('script')).find(s => s.src && s.src.indexOf('terraflow.js') !== -1) as HTMLScriptElement | undefined;
+        const baseSrc = scriptEl && scriptEl.src ? scriptEl.src.replace(/scripts\/terraflow(?:\.min)?\.js(?:.*)?$/, '') : '';
+        if (baseSrc) {
+          const img = document.createElement('img');
+          img.src = baseSrc + 'images/Icon16.png';
+          img.alt = 'TerraFlow';
+          img.style.cssText = `width:16px;height:16px;opacity:0.9;display:inline-block;vertical-align:middle;`;
+          icon = img;
+        } else {
+          const span = document.createElement('span');
+          span.textContent = 'TF';
+          span.style.cssText = `font-size:14px;font-weight:600;opacity:0.85;`;
+          icon = span;
+        }
       }
     } catch (e) {
       const span = document.createElement('span');
