@@ -21,12 +21,18 @@
             ]
         }
     ],
-    "web_accessible_resources": [
-        {
-          "resources": ["scripts/terraflow.js"],
-          "matches": ["https://terrain.scouts.com.au/*"]
-        }
-      ],
+        "web_accessible_resources": [
+                {
+                    "resources": [
+                        "scripts/terraflow.js",
+                        "images/Icon16.png",
+                        "images/Icon48.png",
+                        "images/Icon128.png",
+                        "images/Icon512.png"
+                    ],
+                    "matches": ["https://terrain.scouts.com.au/*"]
+                }
+            ],
     "host_permissions": [
         "https://terrain.scouts.com.au/*",
         "https://events.terrain.scouts.com.au/*",
