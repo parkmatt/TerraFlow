@@ -167,18 +167,20 @@ export default class TerraFlowRouter {
           <span style="margin-right: 8px; font-size: 16px;">📅</span>
           Calendar
         </a>
-        <a href="https://nomisnostab.github.io/Topo-Blazor/index" target="_blank" rel="noopener" id="tf-topo-link" style="
+        <a href="https://nomisnostab.github.io/Topo-Blazor/index" target="_blank" rel="noopener" id="tf-topo-link" title="Opens in a new tab (external)" style="
           display: flex;
           align-items: center;
           padding: 10px 12px;
-          color: #333;
+          color: #0a66c2;
           text-decoration: none;
           font-size: 14px;
-          transition: background-color 0.2s;
+          transition: background-color 0.2s, color 0.15s;
           border: none;
+          gap: 8px;
         ">
-          <span style="margin-right: 8px; font-size: 16px;">🗺️</span>
-          Topo Reports
+          <span style="margin-right: 4px; font-size: 16px; opacity:0.95;">🗺️</span>
+          <span style="flex:1;">Topo Reports</span>
+          <span aria-hidden="true" style="font-size:12px;opacity:0.7;margin-left:6px;">↗</span>
         </a>
       </div>
     `;
