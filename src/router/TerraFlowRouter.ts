@@ -118,17 +118,21 @@ export default class TerraFlowRouter {
           img.style.cssText = `width:16px;height:16px;opacity:0.9;display:inline-block;vertical-align:middle;`;
           icon = img;
         } else {
-          const span = document.createElement('span');
-          span.textContent = 'TF';
-          span.style.cssText = `font-size:14px;font-weight:600;opacity:0.85;`;
-          icon = span;
+          // No runtime/base URL available — avoid text fallback, use a transparent image so
+          // layout remains stable and we don't show a broken image or text.
+          const img = document.createElement('img');
+          img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+          img.alt = 'TerraFlow';
+          img.style.cssText = `width:16px;height:16px;opacity:0;display:inline-block;vertical-align:middle;`;
+          icon = img;
         }
       }
     } catch (e) {
-      const span = document.createElement('span');
-      span.textContent = 'TF';
-      span.style.cssText = `font-size:14px;font-weight:600;opacity:0.85;`;
-      icon = span;
+      const img = document.createElement('img');
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+      img.alt = 'TerraFlow';
+      img.style.cssText = `width:16px;height:16px;opacity:0;display:inline-block;vertical-align:middle;`;
+      icon = img;
     }
     
     trigger.appendChild(icon);
