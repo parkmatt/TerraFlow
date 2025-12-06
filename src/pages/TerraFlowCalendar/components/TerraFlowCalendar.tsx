@@ -25,28 +25,23 @@ const rbcFormats: any = {
   agendaHeaderFormat: ({ start, end }: { start: Date; end: Date }) => `${moment(start).format('DD/MM/YYYY')} – ${moment(end).format('DD/MM/YYYY')}`,
 };
 
-// Victorian School Terms
-// Official dates: https://www.vic.gov.au/school-term-dates or https://www.education.vic.gov.au/
-// Note: These are hardcoded and should be updated annually when official dates are announced
-// No public API available as of 2025 - dates must be manually maintained
+// School Term Dates
+// Reads from localStorage (configured in TerraFlow Settings)
+// Falls back to default dates if not configured
 const getVictorianSchoolTerms = (year: number): { term: number; start: Dayjs; end: Dayjs }[] => {
-  // Known official dates
-  const termDates: { [key: number]: { term: number; start: string; end: string }[] } = {
-    2025: [
-      { term: 1, start: '2025-01-29', end: '2025-04-04' },
-      { term: 2, start: '2025-04-22', end: '2025-06-27' },
-      { term: 3, start: '2025-07-14', end: '2025-09-19' },
-      { term: 4, start: '2025-10-06', end: '2025-12-19' },
-    ],
-    2026: [
-      { term: 1, start: '2026-01-28', end: '2026-03-27' },
-      { term: 2, start: '2026-04-13', end: '2026-06-26' },
-      { term: 3, start: '2026-07-13', end: '2026-09-18' },
-      { term: 4, start: '2026-10-05', end: '2026-12-18' },
-    ],
-  };
-
-  // If we have official dates for this year, use them
+  // Try to get stored terms from localStorage
+  const storedTerms = localStorage.getItem('terraflow_school_terms');
+  let termDates: { [key: number]: { term: number; start: string; end: string }[] } = {};
+  
+  if (storedTerms) {
+    try {
+      termDates = JSON.parse(storedTerms);
+    } catch (e) {
+      console.error('Error parsing stored school terms:', e);
+    }
+  }
+  
+  // If we have stored dates for this year, use them
   if (termDates[year]) {
     return termDates[year].map(t => ({
       term: t.term,
@@ -55,12 +50,37 @@ const getVictorianSchoolTerms = (year: number): { term: number; start: Dayjs; en
     }));
   }
 
-  // Fallback: estimate based on typical patterns (last Wed of Jan, mid-Apr, mid-Jul, early Oct)
+  // Fallback: default dates with holiday periods included
+  // Each term overlaps with the holidays before and after
+  const defaultTermDates: { [key: number]: { term: number; start: string; end: string }[] } = {
+    2025: [
+      { term: 1, start: '2025-01-01', end: '2025-04-21' },
+      { term: 2, start: '2025-04-05', end: '2025-07-13' },
+      { term: 3, start: '2025-06-28', end: '2025-10-05' },
+      { term: 4, start: '2025-09-20', end: '2025-12-31' },
+    ],
+    2026: [
+      { term: 1, start: '2026-01-01', end: '2026-04-12' },
+      { term: 2, start: '2026-03-28', end: '2026-07-12' },
+      { term: 3, start: '2026-06-27', end: '2026-10-04' },
+      { term: 4, start: '2026-09-19', end: '2026-12-31' },
+    ],
+  };
+  
+  if (defaultTermDates[year]) {
+    return defaultTermDates[year].map(t => ({
+      term: t.term,
+      start: dayjs(t.start),
+      end: dayjs(t.end)
+    }));
+  }
+
+  // Last resort: estimate based on typical patterns
   return [
-    { term: 1, start: dayjs(`${year}-01-29`), end: dayjs(`${year}-03-28`) },
-    { term: 2, start: dayjs(`${year}-04-15`), end: dayjs(`${year}-06-27`) },
-    { term: 3, start: dayjs(`${year}-07-14`), end: dayjs(`${year}-09-19`) },
-    { term: 4, start: dayjs(`${year}-10-07`), end: dayjs(`${year}-12-20`) },
+    { term: 1, start: dayjs(`${year}-01-01`), end: dayjs(`${year}-04-21`) },
+    { term: 2, start: dayjs(`${year}-04-05`), end: dayjs(`${year}-07-13`) },
+    { term: 3, start: dayjs(`${year}-06-28`), end: dayjs(`${year}-10-05`) },
+    { term: 4, start: dayjs(`${year}-09-20`), end: dayjs(`${year}-12-31`) },
   ];
 };
 
@@ -313,11 +333,14 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     
     // Listen for changes to default event settings
     window.addEventListener('terraflowEventSettingsChanged', this.handleEventSettingsChange as EventListener);
+    // Listen for changes to school terms
+    window.addEventListener('terraflowSchoolTermsChanged', this.handleSchoolTermsChange as EventListener);
   }
 
   componentWillUnmount() {
-    // Clean up event listener
+    // Clean up event listeners
     window.removeEventListener('terraflowEventSettingsChanged', this.handleEventSettingsChange as EventListener);
+    window.removeEventListener('terraflowSchoolTermsChanged', this.handleSchoolTermsChange as EventListener);
   }
 
   componentDidUpdate(prevProps: TerraFlowCalendarProps, prevState: TerraFlowCalendarState) {
@@ -345,6 +368,11 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
     
     // Update moment locale when starting day of week changes
     this.updateMomentLocale();
+  };
+
+  handleSchoolTermsChange = () => {
+    // Force re-render when school terms are updated in settings
+    this.setState({ calendarKey: this.state.calendarKey + 1 });
   };
 
   fetchCalendars = async () => {
@@ -406,9 +434,18 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
 
   fetchDataForRange = async (date: Date) => {
     try {
-      // Use wider range when navigating to ensure we get events
-      const startDate = moment(date).subtract(1, 'month').startOf('month').format("YYYY-MM-DDTHH:mm:ss");
-      const endDate = moment(date).add(2, 'months').endOf('month').format("YYYY-MM-DDTHH:mm:ss");
+      let startDate: string;
+      let endDate: string;
+      
+      // If in agenda view with a defined range, use that range
+      if (this.state.currentView === 'agenda' && this.state.agendaRange && this.state.agendaRange[0] && this.state.agendaRange[1]) {
+        startDate = this.state.agendaRange[0].startOf('day').format("YYYY-MM-DDTHH:mm:ss");
+        endDate = this.state.agendaRange[1].endOf('day').format("YYYY-MM-DDTHH:mm:ss");
+      } else {
+        // Use wider range when navigating to ensure we get events
+        startDate = moment(date).subtract(1, 'month').startOf('month').format("YYYY-MM-DDTHH:mm:ss");
+        endDate = moment(date).add(2, 'months').endOf('month').format("YYYY-MM-DDTHH:mm:ss");
+      }
 
       const data = await fetchMemberEvents(startDate, endDate);
       const items = data.map((item) => new TerraFlowCalendarItem(item));
@@ -1135,10 +1172,10 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
           ]
         }
         width={800}
-        style={{ maxHeight: '80vh' }}
+        style={{ maxHeight: '85vh' }}
       >
         {/* Show different content based on event status */}
-        <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '65vh', overflowY: 'auto' }}>
           {isConcluded ? (
             // Read-only view for concluded events
             <div>

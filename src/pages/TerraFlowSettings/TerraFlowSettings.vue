@@ -140,6 +140,95 @@
           </div>
         </div>
       </div>
+
+      <!-- School Term Dates Card -->
+      <div class="settings-card">
+        <div class="card-header">
+          <div class="card-title-section">
+            <h2 class="card-title">School Term Dates</h2>
+            <p class="card-description">Configure term dates for quick selection in agenda view</p>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          <!-- Year selector and add button -->
+          <div class="setting-item">
+            <div class="setting-info">
+              <label class="setting-title">Manage Term Dates by Year</label>
+              <p class="setting-description">Add or edit school term dates for different years</p>
+            </div>
+            <div class="setting-action">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input 
+                  type="number" 
+                  v-model="newTermYear" 
+                  :min="2020"
+                  :max="2050"
+                  placeholder="Year"
+                  class="modern-input number-input"
+                  style="width: 100px;"
+                />
+                <button 
+                  @click="addTermYear" 
+                  class="add-button"
+                  :disabled="!newTermYear || termYears.includes(newTermYear)"
+                >
+                  + Add Year
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- List of configured years -->
+          <div v-if="termYears.length > 0" class="term-years-list">
+            <div 
+              v-for="year in sortedTermYears" 
+              :key="year"
+              class="term-year-card"
+            >
+              <div class="term-year-header">
+                <h3 class="term-year-title">{{ year }}</h3>
+                <button 
+                  @click="removeTermYear(year)" 
+                  class="remove-button"
+                  title="Remove this year"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div class="term-inputs-grid">
+                <div 
+                  v-for="term in [1, 2, 3, 4]" 
+                  :key="term"
+                  class="term-input-group"
+                >
+                  <label class="term-label">Term {{ term }}</label>
+                  <div class="date-inputs">
+                    <input 
+                      type="date" 
+                      v-model="schoolTerms[year][term - 1].start"
+                      @change="saveSchoolTerms"
+                      class="modern-input date-input"
+                    />
+                    <span class="date-separator">to</span>
+                    <input 
+                      type="date" 
+                      v-model="schoolTerms[year][term - 1].end"
+                      @change="saveSchoolTerms"
+                      class="modern-input date-input"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="empty-state">
+            <p>No term dates configured. Add a year to get started.</p>
+          </div>
+        </div>
+      </div>
       
     </div>
 

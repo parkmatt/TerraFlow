@@ -12,6 +12,17 @@ interface EventDefaultSettings {
   startingDayOfWeek: number;
 }
 
+// School term interface
+interface SchoolTerm {
+  term: number;
+  start: string;
+  end: string;
+}
+
+interface SchoolTermsByYear {
+  [year: number]: SchoolTerm[];
+}
+
 // Default values
 const DEFAULT_EVENT_SETTINGS: EventDefaultSettings = {
   startTime: "19:00", // 7pm
@@ -35,6 +46,42 @@ const storeEventSetting = (key: keyof EventDefaultSettings, value: any) => {
   }));
 };
 
+// School terms helpers
+const getDefaultSchoolTerms = (): SchoolTermsByYear => {
+  return {
+    2025: [
+      { term: 1, start: '2025-01-01', end: '2025-04-21' },
+      { term: 2, start: '2025-04-05', end: '2025-07-13' },
+      { term: 3, start: '2025-06-28', end: '2025-10-05' },
+      { term: 4, start: '2025-09-20', end: '2025-12-31' },
+    ],
+    2026: [
+      { term: 1, start: '2026-01-01', end: '2026-04-12' },
+      { term: 2, start: '2026-03-28', end: '2026-07-12' },
+      { term: 3, start: '2026-06-27', end: '2026-10-04' },
+      { term: 4, start: '2026-09-19', end: '2026-12-31' },
+    ],
+  };
+};
+
+const getStoredSchoolTerms = (): SchoolTermsByYear => {
+  const stored = localStorage.getItem('terraflow_school_terms');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error('Error parsing stored school terms:', e);
+    }
+  }
+  return getDefaultSchoolTerms();
+};
+
+const storeSchoolTerms = (terms: SchoolTermsByYear) => {
+  localStorage.setItem('terraflow_school_terms', JSON.stringify(terms));
+  // Dispatch event for calendar component to reload
+  window.dispatchEvent(new CustomEvent('terraflowSchoolTermsChanged'));
+};
+
 export default defineComponent({
   data() {
     return {
@@ -47,7 +94,18 @@ export default defineComponent({
       // Calendar data
       availableCalendars: [] as TerrainCalendar[],
       calendarsLoading: true,
+      // School terms data
+      schoolTerms: getStoredSchoolTerms() as SchoolTermsByYear,
+      newTermYear: new Date().getFullYear() as number | null,
     };
+  },
+  computed: {
+    termYears(): number[] {
+      return Object.keys(this.schoolTerms).map(y => parseInt(y));
+    },
+    sortedTermYears(): number[] {
+      return this.termYears.sort((a, b) => a - b);
+    },
   },
   methods: {
     updateDefaultStartTime() {
@@ -69,6 +127,35 @@ export default defineComponent({
     updateStartingDayOfWeek() {
       storeEventSetting('startingDayOfWeek', this.startingDayOfWeek);
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    },
+
+    // School terms methods
+    addTermYear() {
+      if (!this.newTermYear || this.termYears.includes(this.newTermYear)) {
+        return;
+      }
+      
+      // Create default term dates for the new year
+      this.schoolTerms[this.newTermYear] = [
+        { term: 1, start: `${this.newTermYear}-01-01`, end: `${this.newTermYear}-04-21` },
+        { term: 2, start: `${this.newTermYear}-04-05`, end: `${this.newTermYear}-07-13` },
+        { term: 3, start: `${this.newTermYear}-06-28`, end: `${this.newTermYear}-10-05` },
+        { term: 4, start: `${this.newTermYear}-09-20`, end: `${this.newTermYear}-12-31` },
+      ];
+      
+      this.saveSchoolTerms();
+      this.newTermYear = null;
+    },
+
+    removeTermYear(year: number) {
+      if (confirm(`Are you sure you want to remove term dates for ${year}?`)) {
+        delete this.schoolTerms[year];
+        this.saveSchoolTerms();
+      }
+    },
+
+    saveSchoolTerms() {
+      storeSchoolTerms(this.schoolTerms);
     },
     
     async loadAvailableCalendars() {
