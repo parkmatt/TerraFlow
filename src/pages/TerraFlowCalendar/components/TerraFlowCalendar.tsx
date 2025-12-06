@@ -1397,8 +1397,10 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                     key={term}
                     size="small"
                     onClick={() => {
-                      this.setState({ agendaRange: [start, end], currentDate: start.toDate() });
-                      this.setState({ calendarKey: this.state.calendarKey + 1 });
+                      this.setState({ agendaRange: [start, end], currentDate: start.toDate() }, () => {
+                        this.setState({ calendarKey: this.state.calendarKey + 1 });
+                        this.fetchDataForRange(start.toDate());
+                      });
                     }}
                     style={{ fontSize: 12 }}
                   >
@@ -1411,8 +1413,10 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                     const viewYear = dayjs(this.state.currentDate).year();
                     const yearStart = dayjs(`${viewYear}-01-01`);
                     const yearEnd = dayjs(`${viewYear}-12-31`);
-                    this.setState({ agendaRange: [yearStart, yearEnd], currentDate: yearStart.toDate() });
-                    this.setState({ calendarKey: this.state.calendarKey + 1 });
+                    this.setState({ agendaRange: [yearStart, yearEnd], currentDate: yearStart.toDate() }, () => {
+                      this.setState({ calendarKey: this.state.calendarKey + 1 });
+                      this.fetchDataForRange(yearStart.toDate());
+                    });
                   }}
                   style={{ fontSize: 12 }}
                 >
