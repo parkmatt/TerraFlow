@@ -14,7 +14,7 @@ const localizer = momentLocalizer(moment);
 
 // React Big Calendar display formats (use DD/MM/YYYY for dates)
 const rbcFormats: any = {
-  agendaDateFormat: (date: Date) => moment(date).format('DD/MM/YYYY'),
+  agendaDateFormat: (date: Date) => moment(date).format('ddd DD/MM/YYYY'),
   agendaTimeFormat: (date: Date) => moment(date).format('HH:mm'),
   // Ensure React Big Calendar uses DD/MM/YYYY where it displays dates
   dateFormat: 'DD/MM/YYYY',
@@ -1460,7 +1460,7 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                   return sorted.map((ev: any) => {
                   const start = moment(ev.start);
                   const end = moment(ev.end || ev.start);
-                  const date = start.format('DD/MM/YYYY');
+                  const date = start.format('ddd DD/MM/YYYY');
                   const time = ev.allDay ? 'all day' : `${start.format('h:mm a')} – ${end.format('h:mm a')}`;
                   const resource = ev.resource as TerraFlowCalendarItem | any;
                   let location = resource?.event?.location || resource?.location || resource?.Location || '';
