@@ -1420,15 +1420,19 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
           <div style={{ overflow: 'auto', padding: 8 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <colgroup>
-                <col style={{ width: '120px' }} />
-                <col style={{ width: '160px' }} />
+                <col style={{ width: '130px' }} />
+                <col style={{ width: '90px' }} />
+                <col style={{ width: '130px' }} />
+                <col style={{ width: '90px' }} />
                 <col style={{ width: '1fr' }} />
                 <col style={{ width: '220px' }} />
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Date</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Time</th>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Start Date</th>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Start Time</th>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>End Date</th>
+                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>End Time</th>
                   <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Event</th>
                   <th style={{ textAlign: 'left', padding: '8px', borderBottom: '2px solid #eee' }}>Location</th>
                 </tr>
@@ -1460,8 +1464,10 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                   return sorted.map((ev: any) => {
                   const start = moment(ev.start);
                   const end = moment(ev.end || ev.start);
-                  const date = start.format('ddd DD/MM/YYYY');
-                  const time = ev.allDay ? 'all day' : `${start.format('h:mm a')} – ${end.format('h:mm a')}`;
+                  const startDate = start.format('ddd DD/MM/YYYY');
+                  const startTime = ev.allDay ? 'all day' : start.format('h:mm a');
+                  const endDate = end.format('ddd DD/MM/YYYY');
+                  const endTime = ev.allDay ? '' : end.format('h:mm a');
                   const resource = ev.resource as TerraFlowCalendarItem | any;
                   let location = resource?.event?.location || resource?.location || resource?.Location || '';
                   // If not present in summary, try cached full-activity location; otherwise trigger a load
@@ -1485,8 +1491,10 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
                     >
-                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{date}</td>
-                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{time}</td>
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{startDate}</td>
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{startTime}</td>
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{endDate}</td>
+                      <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13 }}>{endTime}</td>
                       <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 10, height: 10, display: 'inline-block', backgroundColor: color, borderRadius: 2 }}></span>
