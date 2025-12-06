@@ -1391,8 +1391,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                 />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <label style={{ fontSize: 12, color: '#666' }}>Quick select:</label>
-                {getVictorianSchoolTerms(dayjs().year()).map(({ term, start, end }) => (
+                <label style={{ fontSize: 12, color: '#666' }}>Quick select ({dayjs(this.state.currentDate).year()}):</label>
+                {getVictorianSchoolTerms(dayjs(this.state.currentDate).year()).map(({ term, start, end }) => (
                   <Button
                     key={term}
                     size="small"
@@ -1408,8 +1408,9 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                 <Button
                   size="small"
                   onClick={() => {
-                    const yearStart = dayjs().startOf('year');
-                    const yearEnd = dayjs().endOf('year');
+                    const viewYear = dayjs(this.state.currentDate).year();
+                    const yearStart = dayjs(`${viewYear}-01-01`);
+                    const yearEnd = dayjs(`${viewYear}-12-31`);
                     this.setState({ agendaRange: [yearStart, yearEnd], currentDate: yearStart.toDate() });
                     this.setState({ calendarKey: this.state.calendarKey + 1 });
                   }}
