@@ -144,8 +144,10 @@ export interface TerrrainCalendarResult {
 
 export interface TerrainCalendar {
   id: string;
-  name: string;
+  name?: string;
+  title?: string;
   colour: string;
   selected: boolean;
   type?: string;
+  section?: string;
 }

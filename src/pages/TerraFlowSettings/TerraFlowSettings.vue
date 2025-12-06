@@ -158,7 +158,7 @@
               <p class="setting-description">Add or edit school term dates for different years</p>
             </div>
             <div class="setting-action">
-              <div style="display: flex; gap: 8px; align-items: center;">
+              <div :style="{ display: 'flex', gap: '8px', alignItems: 'center' }">
                 <input 
                   type="number" 
                   v-model="newTermYear" 
@@ -166,7 +166,7 @@
                   :max="2050"
                   placeholder="Year"
                   class="modern-input number-input"
-                  style="width: 100px;"
+                  :style="{ width: '100px' }"
                 />
                 <button 
                   @click="addTermYear" 
