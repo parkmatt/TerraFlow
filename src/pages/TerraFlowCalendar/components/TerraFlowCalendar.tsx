@@ -1468,6 +1468,15 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                   const startTime = ev.allDay ? 'all day' : start.format('h:mm a');
                   const endDate = end.format('ddd DD/MM/YYYY');
                   const endTime = ev.allDay ? '' : end.format('h:mm a');
+                  
+                  // Check if multi-day event (spans more than one calendar day)
+                  const isMultiDay = !start.isSame(end, 'day');
+                  
+                  // Check if weekend event (starts or occurs on Saturday or Sunday)
+                  const startDay = start.day(); // 0 = Sunday, 6 = Saturday
+                  const endDay = end.day();
+                  const isWeekend = startDay === 0 || startDay === 6 || endDay === 0 || endDay === 6;
+                  
                   const resource = ev.resource as TerraFlowCalendarItem | any;
                   let location = resource?.event?.location || resource?.location || resource?.Location || '';
                   // If not present in summary, try cached full-activity location; otherwise trigger a load
@@ -1499,6 +1508,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 10, height: 10, display: 'inline-block', backgroundColor: color, borderRadius: 2 }}></span>
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.title}</span>
+                          {isMultiDay && <span style={{ fontSize: 11, color: '#666', backgroundColor: '#e8f4f8', padding: '2px 6px', borderRadius: 3, fontWeight: 600 }}>Multi-day</span>}
+                          {isWeekend && <span style={{ fontSize: 11, color: '#666', backgroundColor: '#fff4e6', padding: '2px 6px', borderRadius: 3, fontWeight: 600 }}>Weekend</span>}
                         </div>
                       </td>
                       <td style={{ padding: '8px', verticalAlign: 'top', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{location}</td>
