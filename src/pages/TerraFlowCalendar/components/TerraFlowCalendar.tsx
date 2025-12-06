@@ -25,9 +25,37 @@ const rbcFormats: any = {
   agendaHeaderFormat: ({ start, end }: { start: Date; end: Date }) => `${moment(start).format('DD/MM/YYYY')} – ${moment(end).format('DD/MM/YYYY')}`,
 };
 
-// Victorian School Terms (approximate dates - adjust yearly as needed)
-// These dates are typical but should be verified against official Victorian school term dates
+// Victorian School Terms
+// Official dates: https://www.vic.gov.au/school-term-dates or https://www.education.vic.gov.au/
+// Note: These are hardcoded and should be updated annually when official dates are announced
+// No public API available as of 2025 - dates must be manually maintained
 const getVictorianSchoolTerms = (year: number): { term: number; start: Dayjs; end: Dayjs }[] => {
+  // Known official dates
+  const termDates: { [key: number]: { term: number; start: string; end: string }[] } = {
+    2025: [
+      { term: 1, start: '2025-01-29', end: '2025-04-04' },
+      { term: 2, start: '2025-04-22', end: '2025-06-27' },
+      { term: 3, start: '2025-07-14', end: '2025-09-19' },
+      { term: 4, start: '2025-10-06', end: '2025-12-19' },
+    ],
+    2026: [
+      { term: 1, start: '2026-01-28', end: '2026-03-27' },
+      { term: 2, start: '2026-04-13', end: '2026-06-26' },
+      { term: 3, start: '2026-07-13', end: '2026-09-18' },
+      { term: 4, start: '2026-10-05', end: '2026-12-18' },
+    ],
+  };
+
+  // If we have official dates for this year, use them
+  if (termDates[year]) {
+    return termDates[year].map(t => ({
+      term: t.term,
+      start: dayjs(t.start),
+      end: dayjs(t.end)
+    }));
+  }
+
+  // Fallback: estimate based on typical patterns (last Wed of Jan, mid-Apr, mid-Jul, early Oct)
   return [
     { term: 1, start: dayjs(`${year}-01-29`), end: dayjs(`${year}-03-28`) },
     { term: 2, start: dayjs(`${year}-04-15`), end: dayjs(`${year}-06-27`) },
