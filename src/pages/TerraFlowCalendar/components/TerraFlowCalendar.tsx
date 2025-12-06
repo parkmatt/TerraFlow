@@ -25,6 +25,17 @@ const rbcFormats: any = {
   agendaHeaderFormat: ({ start, end }: { start: Date; end: Date }) => `${moment(start).format('DD/MM/YYYY')} – ${moment(end).format('DD/MM/YYYY')}`,
 };
 
+// Victorian School Terms (approximate dates - adjust yearly as needed)
+// These dates are typical but should be verified against official Victorian school term dates
+const getVictorianSchoolTerms = (year: number): { term: number; start: Dayjs; end: Dayjs }[] => {
+  return [
+    { term: 1, start: dayjs(`${year}-01-29`), end: dayjs(`${year}-03-28`) },
+    { term: 2, start: dayjs(`${year}-04-15`), end: dayjs(`${year}-06-27`) },
+    { term: 3, start: dayjs(`${year}-07-14`), end: dayjs(`${year}-09-19`) },
+    { term: 4, start: dayjs(`${year}-10-07`), end: dayjs(`${year}-12-20`) },
+  ];
+};
+
 // Default event settings helper functions
 const getDefaultEventSettings = () => {
   const defaultStartTime = localStorage.getItem('terraflow_event_startTime') || '19:00';
@@ -1363,20 +1374,50 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
             allowClear
           />
           {this.state.currentView === 'agenda' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={{ marginRight: 4 }}>Agenda range:</label>
-              <DatePicker.RangePicker
-                value={this.state.agendaRange as [Dayjs, Dayjs]}
-                onChange={(val) => {
-                  if (val && val[0] && val[1]) {
-                    this.setState({ agendaRange: [val[0], val[1]], currentDate: val[0].toDate() });
-                    // Update calendar key so the calendar refreshes when range changes
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label style={{ marginRight: 4 }}>Agenda range:</label>
+                <DatePicker.RangePicker
+                  value={this.state.agendaRange as [Dayjs, Dayjs]}
+                  onChange={(val) => {
+                    if (val && val[0] && val[1]) {
+                      this.setState({ agendaRange: [val[0], val[1]], currentDate: val[0].toDate() });
+                      // Update calendar key so the calendar refreshes when range changes
+                      this.setState({ calendarKey: this.state.calendarKey + 1 });
+                    }
+                  }}
+                  style={{ marginLeft: 0 }}
+                  format="DD/MM/YYYY"
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <label style={{ fontSize: 12, color: '#666' }}>Quick select:</label>
+                {getVictorianSchoolTerms(dayjs().year()).map(({ term, start, end }) => (
+                  <Button
+                    key={term}
+                    size="small"
+                    onClick={() => {
+                      this.setState({ agendaRange: [start, end], currentDate: start.toDate() });
+                      this.setState({ calendarKey: this.state.calendarKey + 1 });
+                    }}
+                    style={{ fontSize: 12 }}
+                  >
+                    Term {term}
+                  </Button>
+                ))}
+                <Button
+                  size="small"
+                  onClick={() => {
+                    const yearStart = dayjs().startOf('year');
+                    const yearEnd = dayjs().endOf('year');
+                    this.setState({ agendaRange: [yearStart, yearEnd], currentDate: yearStart.toDate() });
                     this.setState({ calendarKey: this.state.calendarKey + 1 });
-                  }
-                }}
-                style={{ marginLeft: 0 }}
-                format="DD/MM/YYYY"
-              />
+                  }}
+                  style={{ fontSize: 12 }}
+                >
+                  Full Year
+                </Button>
+              </div>
             </div>
           )}
         </div>
