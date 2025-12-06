@@ -913,6 +913,8 @@ export class TerraFlowCalendarComponent extends React.Component<TerraFlowCalenda
       calendars: calendarUpdate 
     }, () => {
       this.updateFilteredEvents();
+      // Fetch events for newly selected calendars
+      this.fetchData();
     });
     
     // Then sync to server
